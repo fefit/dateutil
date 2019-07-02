@@ -24,7 +24,12 @@ type PatternInfo struct {
 }
 
 var (
-	allMonthExp = []string{"jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "sept", "oct", "nov", "dec", "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"}
+	allMonthExp  = []string{"january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december", "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "sept", "oct", "nov", "dec", "viii", "iii", "vii", "xii", "iv", "vi", "ix", "xi", "ii", "i", "v", "x"}
+	romanNumHash = map[rune]int{
+		'i': 1,
+		'v': 5,
+		'x': 10,
+	}
 	dateFormats = FormatList{
 		"dd": "([0-2]?[0-9]|3[0-1])(?:st|nd|rd|th)?",
 		"DD": "(0[0-9]|[1-2][0-9]|3[0-1])",
@@ -68,7 +73,6 @@ func (pattern *Pattern) Match(target string) (FormatResult, []int, bool) {
 	if loc := rule.FindStringIndex(target); loc != nil {
 		result := FormatResult{}
 		matchs := rule.FindStringSubmatch(target)
-		fmt.Println(matchs, keys)
 		if len(matchs) == len(keys)+1 {
 			for index, value := range matchs[1:] {
 				result[keys[index]] = value
@@ -84,12 +88,14 @@ func StrToTime(target interface{}) (int64, error) {
 	switch t := target.(type) {
 	case int:
 		return int64(t), nil
+	case int32:
+		return int64(t), nil
 	case int64:
 		return t, nil
 	case float64:
 		return int64(t), nil
 	case string:
-		nowTime, err := DateTime(target)
+		nowTime, err := DateTime(t)
 		if err == nil {
 			return nowTime.UTC().Unix(), nil
 		}
@@ -106,6 +112,12 @@ func DateTime(target interface{}) (time.Time, error) {
 	switch t := target.(type) {
 	case int:
 		timestamp = int64(t)
+		isUnixTime = true
+	case int32:
+		timestamp = int64(t)
+		isUnixTime = true
+	case int64:
+		timestamp = t
 		isUnixTime = true
 	case float64:
 		timestamp = int64(t)
@@ -132,19 +144,24 @@ func DateTime(target interface{}) (time.Time, error) {
 						} else {
 							return time.Time{}, fmt.Errorf("wrong datetime %s", t)
 						}
+					} else {
+						// no need for time format
+						timeFormat = ""
 					}
 				}
 			}
 		}
-		if result, loc, ok := matchTimeFormat(timeFormat); ok {
-			if loc[0] != 0 || loc[1] != len(timeFormat) {
-				return time.Time{}, fmt.Errorf("wrong start of time")
-			}
-			if lasts == nil {
-				lasts = result
-			} else {
-				for key, value := range result {
-					lasts[key] = value
+		if timeFormat != "" {
+			if result, loc, ok := matchTimeFormat(timeFormat); ok {
+				if loc[0] != 0 || loc[1] != len(timeFormat) {
+					return time.Time{}, fmt.Errorf("wrong start of time")
+				}
+				if lasts == nil {
+					lasts = result
+				} else {
+					for key, value := range result {
+						lasts[key] = value
+					}
 				}
 			}
 		}
@@ -168,6 +185,7 @@ func noEmptyField(target FormatResult, args ...string) string {
 	return ""
 }
 
+// translate result info to time
 func makeFormatDateTime(result FormatResult) (time.Time, error) {
 	now := time.Now()
 	// year
@@ -198,7 +216,24 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 			curMonth = strings.ToLower(curMonth)
 			for index, name := range allMonthExp {
 				if name == curMonth {
-					month = index%12 + 1
+
+					if index >= 24 {
+						// roman
+						month = 0
+						prev := 0
+						rns := []rune(name)
+						for idx, num := range rns {
+							value := romanNumHash[num]
+							if idx > 0 && value > prev {
+								month = value - prev
+							} else {
+								month += value
+							}
+							prev = value
+						}
+					} else {
+						month = index%12 + 1
+					}
 					break
 				}
 			}
@@ -281,14 +316,12 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 			addMinute, _ = strconv.ParseInt(string(rns[count-2:]), 10, 64)
 		}
 		correct := (time.Duration(addHour)*time.Hour + time.Duration(addMinute)*time.Minute) * time.Duration(multi)
-		fmt.Println("correct", correct, addHour, addMinute)
 		lastTime = lastTime.Add(correct)
 	}
 	if timezone != "Local" {
 		location, _ = time.LoadLocation("Local")
 		lastTime = lastTime.In(location)
 	}
-	fmt.Println("lastTime", lastTime)
 	return lastTime, nil
 }
 

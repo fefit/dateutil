@@ -7,6 +7,6 @@ import (
 )
 
 func TestStrToTime(t *testing.T) {
-	result, _ := StrToTime("16-05-12 11:22:33GMT+07:00")
+	result, _ := DateTime("IV")
 	assert.Nil(t, result)
 }
