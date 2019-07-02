@@ -24,10 +24,11 @@ type PatternInfo struct {
 }
 
 var (
+	allMonthExp = []string{"jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "sept", "oct", "nov", "dec", "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"}
 	dateFormats = FormatList{
 		"dd": "([0-2]?[0-9]|3[0-1])(?:st|nd|rd|th)?",
 		"DD": "(0[0-9]|[1-2][0-9]|3[0-1])",
-		"m":  "(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)",
+		"m":  "(" + strings.Join(allMonthExp, "|") + ")",
 		"M":  "(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)",
 		"mm": "(0?[0-9]|1[0-2])",
 		"MM": "(0[0-9]|1[0-2])",
@@ -44,7 +45,7 @@ var (
 		"II":           "([0-5][0-9])",
 		"space":        "([ \\t])",
 		"tz":           "(\\(?[A-Za-z]{1,6}\\)?|[A-Z][a-z]+(?:[_/][A-Z][a-z]+)+)",
-		"tzcorrection": "(?:GMT)?[+-](0?[0-9]|1[0-2]):?(?:[0-5][0-9])?",
+		"tzcorrection": "((?:GMT)?[+-](?:0?[0-9]|1[0-2]):?(?:[0-5][0-9])?)",
 	}
 	allFormats = map[string]*FormatList{
 		"date": &dateFormats,
@@ -55,9 +56,10 @@ var (
 
 // Pattern struct
 type Pattern struct {
-	Rule *regexp.Regexp
-	Keys []string
-	Type string
+	Rule     *regexp.Regexp
+	Keys     []string
+	Type     string
+	Original string
 }
 
 // Match method
@@ -65,40 +67,77 @@ func (pattern *Pattern) Match(target string) (FormatResult, []int, bool) {
 	rule, keys := pattern.Rule, pattern.Keys
 	if loc := rule.FindStringIndex(target); loc != nil {
 		result := FormatResult{}
-		replaceWith(rule, target, func(args ...string) string {
-			for index, value := range args[1:] {
-				key := keys[index]
-				result[key] = value
+		matchs := rule.FindStringSubmatch(target)
+		fmt.Println(matchs, keys)
+		if len(matchs) == len(keys)+1 {
+			for index, value := range matchs[1:] {
+				result[keys[index]] = value
 			}
-			return ""
-		})
+		}
 		return result, loc, true
 	}
 	return nil, nil, false
 }
 
-// StrToTime func
-func StrToTime(target interface{}) (time.Time, error) {
+// StrToTime to timestamp
+func StrToTime(target interface{}) (int64, error) {
 	switch t := target.(type) {
 	case int:
+		return int64(t), nil
+	case int64:
+		return t, nil
 	case float64:
+		return int64(t), nil
+	case string:
+		nowTime, err := DateTime(target)
+		if err == nil {
+			return nowTime.UTC().Unix(), nil
+		}
+		return 0, err
+	default:
+		return 0, fmt.Errorf("unsupport type %T for StrToTime func", t)
+	}
+}
+
+// DateTime func
+func DateTime(target interface{}) (time.Time, error) {
+	var timestamp int64
+	isUnixTime := false
+	switch t := target.(type) {
+	case int:
+		timestamp = int64(t)
+		isUnixTime = true
+	case float64:
+		timestamp = int64(t)
+		isUnixTime = true
 	case string:
 		var lasts FormatResult
+		t = strings.TrimSpace(t)
 		timeFormat := t
-		startIndex := 0
 		total := len(t)
 		if result, loc, ok := matchDateFormat(t); ok {
-			if loc[0] != startIndex {
-				return time.Time{}, fmt.Errorf("wrong start of date")
-			}
-			lasts = result
-			if loc[1] < total {
-				timeFormat = t[loc[1]:]
-				startIndex = 1
+			if loc[0] != 0 {
+				// ignore, try time format
+			} else {
+				suffix := t[loc[1]:]
+				plainSuffix := strings.TrimSpace(suffix)
+				isJustSpaces := suffix == "" || plainSuffix == ""
+				if _, ok := result["YY"]; ok && len(result) == 1 && isJustSpaces {
+					// ignore, use time format first
+				} else {
+					lasts = result
+					if loc[1] < total && !isJustSpaces {
+						if strings.HasPrefix(suffix, " ") {
+							timeFormat = plainSuffix
+						} else {
+							return time.Time{}, fmt.Errorf("wrong datetime %s", t)
+						}
+					}
+				}
 			}
 		}
 		if result, loc, ok := matchTimeFormat(timeFormat); ok {
-			if loc[0] != startIndex || loc[1] != len(timeFormat) {
+			if loc[0] != 0 || loc[1] != len(timeFormat) {
 				return time.Time{}, fmt.Errorf("wrong start of time")
 			}
 			if lasts == nil {
@@ -112,8 +151,13 @@ func StrToTime(target interface{}) (time.Time, error) {
 		if lasts != nil {
 			return makeFormatDateTime(lasts)
 		}
+		return time.Time{}, fmt.Errorf("wrong datetime string:%s", t)
 	}
-	return time.Time{}, fmt.Errorf("wrong ")
+	if isUnixTime {
+		location, _ := time.LoadLocation("Local")
+		return time.Unix(timestamp, 0).UTC().In(location), nil
+	}
+	return time.Time{}, fmt.Errorf("wrong datatime %v", target)
 }
 func noEmptyField(target FormatResult, args ...string) string {
 	for _, field := range args {
@@ -126,6 +170,7 @@ func noEmptyField(target FormatResult, args ...string) string {
 
 func makeFormatDateTime(result FormatResult) (time.Time, error) {
 	now := time.Now()
+	// year
 	year := now.Year()
 	strYear := strconv.Itoa(year)
 	rnYear := []rune(strYear)
@@ -142,25 +187,109 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 		}
 		year, _ = strconv.Atoi(string(rns))
 	}
-	fmt.Println("year", year)
-	return time.Time{}, nil
-}
-
-/*
-* https://gist.github.com/elliotchance/d419395aa776d632d897
- */
-func replaceWith(re *regexp.Regexp, str string, repl func(args ...string) string) string {
-	result := ""
-	lastIndex := 0
-	for _, v := range re.FindAllSubmatchIndex([]byte(str), -1) {
-		groups := []string{}
-		for i := 0; i < len(v); i += 2 {
-			groups = append(groups, str[v[i]:v[i+1]])
+	curMonth := noEmptyField(result, "MM", "mm")
+	// month
+	var month int
+	if curMonth != "" {
+		month, _ = strconv.Atoi(curMonth)
+	} else {
+		curMonth = noEmptyField(result, "M", "m")
+		if curMonth != "" {
+			curMonth = strings.ToLower(curMonth)
+			for index, name := range allMonthExp {
+				if name == curMonth {
+					month = index%12 + 1
+					break
+				}
+			}
+		} else {
+			month = 1
 		}
-		result += str[lastIndex:v[0]] + repl(groups...)
-		lastIndex = v[1]
 	}
-	return result + str[lastIndex:]
+	// day
+	var day int
+	curDay := noEmptyField(result, "DD", "dd")
+	if curDay != "" {
+		day, _ = strconv.Atoi(curDay)
+	} else {
+		day = 1
+	}
+	// hour
+	var hour int
+	curHour := noEmptyField(result, "HH", "hh")
+	if curHour != "" {
+		hour, _ = strconv.Atoi(curHour)
+		if meridian, ok := result["meridian"]; ok && (meridian[0] == 'P' || meridian[0] == 'p') {
+			hour += 12
+		}
+	} else {
+		hour = 0
+	}
+	// minute
+	var minute int
+	curMinute := noEmptyField(result, "MN")
+	if curMinute != "" {
+		minute, _ = strconv.Atoi(curMinute)
+	} else {
+		minute = 0
+	}
+	// second
+	var second int
+	curSecond := noEmptyField(result, "II")
+	if curSecond != "" {
+		second, _ = strconv.Atoi(curSecond)
+	} else {
+		second = 0
+	}
+	// millisecond
+	var milliSecond int
+	curMillisecond := noEmptyField(result, "frac")
+	if curMillisecond != "" {
+		milliSecond, _ = strconv.Atoi(curMillisecond[1:])
+	} else {
+		milliSecond = 0
+	}
+	// tz, tzcorrection
+	var lastTime time.Time
+	timezone := "Local"
+	tz := noEmptyField(result, "tz")
+	tzcorrection := noEmptyField(result, "tzcorrection")
+	needCorrection := false
+	if tz != "" {
+		timezone = tz
+	} else {
+		if tzcorrection != "" {
+			timezone = "UTC"
+			needCorrection = true
+		}
+	}
+	location, _ := time.LoadLocation(timezone)
+	lastTime = time.Date(year, time.Month(month), day, hour, minute, second, milliSecond*1e6, location)
+	if needCorrection {
+		tzcorrection = strings.TrimPrefix(tzcorrection, "GMT")
+		rns := []rune(tzcorrection)
+		count := len(rns)
+		var (
+			multi, addMinute, addHour int64
+		)
+		multi = 1
+		if rns[0] == '+' {
+			multi = -1
+		}
+		addHour, _ = strconv.ParseInt(string(rns[1:3]), 10, 64)
+		if count >= 5 {
+			addMinute, _ = strconv.ParseInt(string(rns[count-2:]), 10, 64)
+		}
+		correct := (time.Duration(addHour)*time.Hour + time.Duration(addMinute)*time.Minute) * time.Duration(multi)
+		fmt.Println("correct", correct, addHour, addMinute)
+		lastTime = lastTime.Add(correct)
+	}
+	if timezone != "Local" {
+		location, _ = time.LoadLocation("Local")
+		lastTime = lastTime.In(location)
+	}
+	fmt.Println("lastTime", lastTime)
+	return lastTime, nil
 }
 
 func makePatterns(t string, rules ...string) (*PatternInfo, error) {
@@ -170,6 +299,7 @@ func makePatterns(t string, rules ...string) (*PatternInfo, error) {
 		for _, rule := range rules {
 			pattern := new(Pattern)
 			pattern.Type = t
+			pattern.Original = rule
 			keys := []string{}
 			context := regRule.ReplaceAllStringFunc(rule, func(all string) string {
 				rns := []rune(all)
@@ -192,6 +322,8 @@ func makePatterns(t string, rules ...string) (*PatternInfo, error) {
 	}
 	return nil, fmt.Errorf("the format type '%s' doesn't exist", t)
 }
+
+// date fomrats
 func matchDateFormat(target string) (FormatResult, []int, bool) {
 	var patterns []*Pattern
 	if info, ok := allPatternInfo["date"]; ok {
@@ -208,14 +340,14 @@ func matchDateFormat(target string) (FormatResult, []int, bool) {
 			"${YY}\\/${mm}\\/${dd}", // 2006/5/12
 			"${YY}-${mm}",
 			"${y}-${mm}-${dd}",
-			"${dd}[.\t-]${mm}[.-]${YY}",
-			"${dd}[.\t]${mm}\\.${yy}",
-			"(?i)${dd}[ \t.-]*${m}[ \t.-]*${y}",
-			"(?i)${m}[ \t.-]*${YY}",
-			"(?i)${YY}[ \t.-]*${m}",
-			"(?i)${m}[ .\t-]*${dd}[,.stndrh\t ]+${y}",
-			"(?i)${m}[ .\t-]*${dd}[,.stndrh\t ]*",
-			"(?i)${d}[ .\t-]*${m}",
+			"${dd}[.\\t-]${mm}[.-]${YY}",
+			"${dd}[.\\t]${mm}\\.${yy}",
+			"(?i)${dd}[ \\t.-]*${m}[ \\t.-]*${y}",
+			"(?i)${m}[ \\t.-]*${YY}",
+			"(?i)${YY}[ \\t.-]*${m}",
+			"(?i)${m}[ .\\t-]*${dd}[,.stndrh\\t ]+${y}",
+			"(?i)${m}[ .\\t-]*${dd}[,.stndrh\\t ]*",
+			"(?i)${d}[ .\\t-]*${m}",
 			"(?i)${M}-${DD}-${y}",
 			"(?i)${y}-${M}-${DD}",
 			"${YY}",
@@ -230,12 +362,15 @@ func matchDateFormat(target string) (FormatResult, []int, bool) {
 	}
 	return nil, nil, false
 }
+
+// time formats
 func matchTimeFormat(target string) (FormatResult, []int, bool) {
 	var patterns []*Pattern
 	if info, ok := allPatternInfo["time"]; ok {
 		patterns = info.Patterns
 	} else {
 		info, _ := makePatterns("time",
+			"(?i)t?${HH}[.:]${MN}[.:]${II}${space}?(?:${tzcorrection}|${tz})",
 			"(?i)t?${HH}[.:]${MN}[.:]${II}",
 			"(?i)${hh}[.:]${MN}[.:]${II}${space}?${meridian}",
 			"(?i)${hh}${space}?${meridian}",
@@ -243,9 +378,8 @@ func matchTimeFormat(target string) (FormatResult, []int, bool) {
 			"(?i)${hh}:${MN}:${II}[.:][0-9]+${meridian}",
 			"(?i)t?${HH}[.:]${MN}",
 			"(?i)t?${HH}${MN}",
-			"(?i)t?${HH}${MN}${II}",
-			"(?i)t?${HH}[.:]${MN}[.:]${II}${space}?(?:${tzcorrection}|${tz})",
 			"(?i)t?${HH}[.:]${MN}[.:]${II}${frac}",
+			"(?i)t?${HH}${MN}${II}",
 			"(?i)(?:${tzcorrection}|${tz})",
 		)
 		patterns = info.Patterns
@@ -354,7 +488,7 @@ func DateFormat(target interface{}, format string) (string, error) {
 	if cur, ok := target.(time.Time); ok {
 		timeTarget = cur
 	} else {
-		if cur, err := StrToTime(target); err == nil {
+		if cur, err := DateTime(target); err == nil {
 			timeTarget = cur
 		} else {
 			return "", err
