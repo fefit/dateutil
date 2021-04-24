@@ -8,5 +8,5 @@ import (
 
 func TestStrToTime(t *testing.T) {
 	result, _ := DateTime("IV")
-	assert.Nil(t, result)
+	assert.NotNil(t, result)
 }

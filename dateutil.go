@@ -86,12 +86,12 @@ func (pattern *Pattern) Match(target string) (FormatResult, []int, bool) {
 // StrToTime to timestamp
 func StrToTime(target interface{}) (int64, error) {
 	switch t := target.(type) {
+	case int64:
+		return t, nil
 	case int:
 		return int64(t), nil
 	case int32:
 		return int64(t), nil
-	case int64:
-		return t, nil
 	case float64:
 		return int64(t), nil
 	case string:
@@ -108,20 +108,15 @@ func StrToTime(target interface{}) (int64, error) {
 // DateTime func
 func DateTime(target interface{}) (time.Time, error) {
 	var timestamp int64
-	isUnixTime := false
 	switch t := target.(type) {
-	case int:
-		timestamp = int64(t)
-		isUnixTime = true
-	case int32:
-		timestamp = int64(t)
-		isUnixTime = true
 	case int64:
 		timestamp = t
-		isUnixTime = true
+	case int:
+		timestamp = int64(t)
+	case int32:
+		timestamp = int64(t)
 	case float64:
 		timestamp = int64(t)
-		isUnixTime = true
 	case string:
 		var lasts FormatResult
 		t = strings.TrimSpace(t)
@@ -169,12 +164,12 @@ func DateTime(target interface{}) (time.Time, error) {
 			return makeFormatDateTime(lasts)
 		}
 		return time.Time{}, fmt.Errorf("wrong datetime string:%s", t)
+	default:
+		// other conditions
+		return time.Time{}, fmt.Errorf("wrong datatime %v", target)
 	}
-	if isUnixTime {
-		location, _ := time.LoadLocation("Local")
-		return time.Unix(timestamp, 0).UTC().In(location), nil
-	}
-	return time.Time{}, fmt.Errorf("wrong datatime %v", target)
+	location, _ := time.LoadLocation("Local")
+	return time.Unix(timestamp, 0).UTC().In(location), nil
 }
 func noEmptyField(target FormatResult, args ...string) string {
 	for _, field := range args {
@@ -327,7 +322,7 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 
 func makePatterns(t string, rules ...string) (*PatternInfo, error) {
 	if formatList, ok := allFormats[t]; ok {
-		regRule, _ := regexp.Compile("\\$\\{[A-Za-z]+}")
+		regRule, _ := regexp.Compile(`\$\{[A-Za-z]+}`)
 		ptns := []*Pattern{}
 		for _, rule := range rules {
 			pattern := new(Pattern)
