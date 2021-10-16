@@ -411,18 +411,19 @@ func matchTimeFormat(target string) (FormatResult, []int, bool) {
 	if info, ok := allPatternInfo["time"]; ok {
 		patterns = info.Patterns
 	} else {
+		// keep the orders
 		info, _ := makePatterns("time",
-			"(?i)t?${HH}[.:]${MN}[.:]${II}${space}?(?:${tzcorrection}|${tz})",
-			"(?i)t?${HH}[.:]${MN}[.:]${II}",
-			"(?i)${hh}[.:]${MN}[.:]${II}${space}?${meridian}",
-			"(?i)${hh}${space}?${meridian}",
-			"(?i)${hh}[.:]${MN}${space}?${meridian}",
-			"(?i)${hh}:${MN}:${II}[.:][0-9]+${meridian}",
-			"(?i)t?${HH}[.:]${MN}",
-			"(?i)t?${HH}${MN}",
-			"(?i)t?${HH}[.:]${MN}[.:]${II}${frac}",
-			"(?i)t?${HH}${MN}${II}",
-			"(?i)(?:${tzcorrection}|${tz})",
+			"(?i)${hh}[.:]${MN}[.:]${II}${space}?${meridian}",                 // "4:08:37 am", "7:19:19P.M."
+			"(?i)t?${HH}[.:]${MN}[.:]${II}${space}?(?:${tzcorrection}|${tz})", // "040837CEST", "T191919-0700"
+			"(?i)${hh}:${MN}:${II}[.:][0-9]+${meridian}",                      // "4:08:39:12313am"
+			"(?i)${hh}[.:]${MN}${space}?${meridian}",                          // "4:08:37 am", "7:19:19P.M."
+			"(?i)t?${HH}[.:]${MN}[.:]${II}${frac}",                            // "04.08.37.81412", "19:19:19.532453"
+			"(?i)t?${HH}[.:]${MN}[.:]${II}",                                   // "04.08.37", "t19:19:19"
+			"(?i)t?${HH}[.:]${MN}",                                            //	"04:08", "19.19", "T23:43"
+			"(?i)${hh}${space}?${meridian}",                                   // "4 am", "5PM"
+			"(?i)t?${HH}${MN}${II}",                                           // "04.08.37", "t19:19:19"
+			"(?i)t?${HH}${MN}",                                                // "0408", "t1919", "T2343"
+			"(?i)(?:${tzcorrection}|${tz})",                                   // "CEST", "Europe/Amsterdam", "+0430", "GMT-06:00"
 		)
 		patterns = info.Patterns
 	}
