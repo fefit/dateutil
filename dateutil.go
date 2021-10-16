@@ -30,6 +30,8 @@ var (
 		'v': 5,
 		'x': 10,
 	}
+	// the below formats can be seen in:
+	// https://www.php.net/manual/en/datetime.formats.time.php
 	dateFormats = FormatList{
 		"dd": "([0-2]?[0-9]|3[0-1])(?:st|nd|rd|th)?",
 		"DD": "(0[0-9]|[1-2][0-9]|3[0-1])",
@@ -171,6 +173,9 @@ func DateTime(target interface{}) (time.Time, error) {
 	location, _ := time.LoadLocation("Local")
 	return time.Unix(timestamp, 0).UTC().In(location), nil
 }
+
+// get any of the argument fields in the target format result
+// if no field found, return an empty string
 func noEmptyField(target FormatResult, args ...string) string {
 	for _, field := range args {
 		if cur, ok := target[field]; ok && cur != "" {
@@ -180,10 +185,11 @@ func noEmptyField(target FormatResult, args ...string) string {
 	return ""
 }
 
-// translate result info to time
+// translate result information to a time struct
 func makeFormatDateTime(result FormatResult) (time.Time, error) {
+	// current time
 	now := time.Now()
-	// year
+	// get full year of current
 	year := now.Year()
 	strYear := strconv.Itoa(year)
 	rnYear := []rune(strYear)
@@ -192,7 +198,12 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 		rns := []rune(curYear)
 		total := len(curYear)
 		switch total {
-		case 3, 4:
+		case 4:
+		case 3:
+			// e.g. '032' -> '2032'
+			if rns[0] == '0' {
+				rns = append(rnYear[0:1], rns...)
+			}
 		case 2:
 			rns = append(rnYear[0:2], rns...)
 		case 1:
@@ -211,7 +222,6 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 			curMonth = strings.ToLower(curMonth)
 			for index, name := range allMonthExp {
 				if name == curMonth {
-
 					if index >= 24 {
 						// roman
 						month = 0
@@ -320,6 +330,8 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 	return lastTime, nil
 }
 
+// make patterns
+// save the patterns into global variable 'allPatternInfo'
 func makePatterns(t string, rules ...string) (*PatternInfo, error) {
 	if formatList, ok := allFormats[t]; ok {
 		regRule, _ := regexp.Compile(`\$\{[A-Za-z]+}`)
@@ -357,29 +369,31 @@ func matchDateFormat(target string) (FormatResult, []int, bool) {
 	if info, ok := allPatternInfo["date"]; ok {
 		patterns = info.Patterns
 	} else {
+		// keep the orders
+		// make sure the match is greedy, as much characters as it can
 		info, _ := makePatterns("date",
-			"[+-]?${YY}-${MM}-${DD}",
-			"${YY}-${mm}-${dd}",
-			"${YY}\\/${MM}\\/${DD}",
-			"${yy}-${MM}-${DD}",
-			"${YY}${MM}${DD}",
-			"${mm}\\/${dd}",         // 5/12
-			"${mm}\\/${dd}\\/${y}",  // 5/12/06
-			"${YY}\\/${mm}\\/${dd}", // 2006/5/12
-			"${YY}-${mm}",
-			"${y}-${mm}-${dd}",
-			"${dd}[.\\t-]${mm}[.-]${YY}",
-			"${dd}[.\\t]${mm}\\.${yy}",
-			"(?i)${dd}[ \\t.-]*${m}[ \\t.-]*${y}",
-			"(?i)${m}[ \\t.-]*${YY}",
-			"(?i)${YY}[ \\t.-]*${m}",
-			"(?i)${m}[ .\\t-]*${dd}[,.stndrh\\t ]+${y}",
-			"(?i)${m}[ .\\t-]*${dd}[,.stndrh\\t ]*",
-			"(?i)${d}[ .\\t-]*${m}",
-			"(?i)${M}-${DD}-${y}",
-			"(?i)${y}-${M}-${DD}",
-			"${YY}",
-			"(?i)${m}",
+			"[+-]?${YY}-${MM}-${DD}",                    // "-0002-07-26", "+1978-04-17", "1814-05-17"
+			"${YY}-${mm}-${dd}",                         // "2008-6-30", "1978-12-22"
+			"${yy}-${MM}-${DD}",                         // "08-06-30", "78-12-22"
+			"${y}-${mm}-${dd}",                          // "2008-6-30", "78-12-22", "8-6-21"
+			"(?i)${M}-${DD}-${y}",                       // "May-09-78", "Apr-17-1790"
+			"(?i)${y}-${M}-${DD}",                       // "78-Dec-22", "1814-MAY-17"
+			"${YY}\\/${MM}\\/${DD}",                     // "2008/06/30", "1978/12/22"
+			"${YY}\\/${mm}\\/${dd}",                     // "2008/6/30", "1978/12/22"
+			"${mm}\\/${dd}\\/${y}",                      // "12/22/78", "1/17/2006", "1/17/6"
+			"${dd}[.\\t-]${mm}[.-]${YY}",                // "30-6-2008", "22.12.1978"
+			"${dd}[.\\t]${mm}\\.${yy}",                  // "30.6.08", "22\t12.78"
+			"${YY}${MM}${DD}",                           // "15810726", "19780417", "18140517"
+			"${mm}\\/${dd}",                             // "5/12", "10/27"
+			"${YY}-${mm}",                               // "2008-6", "2008-06", "1978-12"
+			"(?i)${dd}[ \\t.-]*${m}[ \\t.-]*${y}",       // "30-June 2008", "22DEC78", "14 III 1879"
+			"(?i)${m}[ \\t.-]*${YY}",                    // "June 2008", "DEC1978", "March 1879"
+			"(?i)${YY}[ \\t.-]*${m}",                    // "2008 June", "1978-XII", "1879.MArCH"
+			"(?i)${m}[ .\\t-]*${dd}[,.stndrh\\t ]+${y}", // "July 1st, 2008", "April 17, 1790", "May.9,78"
+			"(?i)${m}[ .\\t-]*${dd}[,.stndrh\\t ]*",     // "July 1st,", "Apr 17", "May.9"
+			"(?i)${d}[ .\\t-]*${m}",                     // "1 July", "17 Apr", "9.May"
+			"${YY}",                                     // "1978", "2008"
+			"(?i)${m}",                                  // "March", "jun", "DEC"
 		)
 		patterns = info.Patterns
 	}
@@ -422,6 +436,9 @@ func matchTimeFormat(target string) (FormatResult, []int, bool) {
 
 // DateFormat func
 func DateFormat(target interface{}, format string) (string, error) {
+	// the golang layout, use the format of the golang born time
+	// this is used for strings.NewReplacer
+	// so they are appeared pairs with a string array
 	layouts := []string{
 		// year
 		"Y", "2006",
@@ -452,23 +469,33 @@ func DateFormat(target interface{}, format string) (string, error) {
 		"D": "Mon",
 		"l": "Monday",
 	}
+	// weekday, from monday to sunday
+	// monday return 1, sunday return 7
+	// it's the same as golang's weekday of time.Time.
 	N := func(t time.Time) string {
 		weekday := t.Weekday()
 		return fmt.Sprintf("%d", int(weekday))
 	}
+	// weekday, from sunday to saturday
+	// sunday return 0, saturday return 6
 	w := func(t time.Time) string {
 		weekday := t.Weekday()
-		dayNum := int(weekday) % 7
+		dayNum := (int(weekday) + 1) % 7
 		return fmt.Sprintf("%d", dayNum)
 	}
+	// the day of the year, from 0 to 365
+	// the golang's yearday is from 1 to 366
+	// so here need reduce by one day
 	z := func(t time.Time) string {
 		yearday := t.YearDay()
 		return fmt.Sprintf("%d", yearday-1)
 	}
+	// the nth week of a year
 	W := func(t time.Time) string {
 		_, week := t.ISOWeek()
 		return fmt.Sprintf("%d", week)
 	}
+	// check if is leap year
 	L := func(t time.Time) string {
 		yearday := t.YearDay()
 		if yearday > 365 {
@@ -476,17 +503,30 @@ func DateFormat(target interface{}, format string) (string, error) {
 		}
 		return "0"
 	}
+	// get how many days of the month
 	t := func(t time.Time) string {
 		nums := [12]int{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
+		// if is leap Year, the second month has 29 days.
 		monthIndex := int(t.Month()) - 1
 		if monthIndex == 1 && t.YearDay() > 365 {
 			return "29"
 		}
 		return fmt.Sprintf("%d", nums[monthIndex])
 	}
+	// get the hour of the time, 2 digits with leading zero
 	H := func(t time.Time) string {
 		hour := t.Hour()
 		return fmt.Sprintf("%02d", hour)
+	}
+	// get the microseconds of the time
+	u := func(t time.Time) string {
+		nano := t.Nanosecond()
+		return fmt.Sprintf("%06d", nano/1e3)
+	}
+	// get the milliseconds of the time
+	v := func(t time.Time) string {
+		nano := t.Nanosecond()
+		return fmt.Sprintf("%03d", nano/1e6)
 	}
 	fns := map[string]func(t time.Time) string{
 		"N": N,
@@ -496,9 +536,15 @@ func DateFormat(target interface{}, format string) (string, error) {
 		"L": L,
 		"t": t,
 		"H": H,
+		"u": u,
+		"v": v,
 	}
+	// numbers in date can format first by the golang layout
+	// "Y-m-da" will translate into -> '2006-01-02a'
 	repRule := strings.NewReplacer(layouts...)
 	layout := repRule.Replace(format)
+	// The other format keyword such as before 'a'
+	// Will use golang layout format or functions
 	regRule := func() *regexp.Regexp {
 		var str strings.Builder
 		str.WriteString("[")
@@ -512,6 +558,7 @@ func DateFormat(target interface{}, format string) (string, error) {
 		rule, _ := regexp.Compile(str.String())
 		return rule
 	}()
+	// Change target to time struct
 	var timeTarget time.Time
 	if cur, ok := target.(time.Time); ok {
 		timeTarget = cur
@@ -522,7 +569,9 @@ func DateFormat(target interface{}, format string) (string, error) {
 			return "", err
 		}
 	}
+	// Format date numbers first, no letter characters will making
 	result := timeTarget.Format(layout)
+	// Replace the keyword letter character into real value
 	result = regRule.ReplaceAllStringFunc(result, func(name string) string {
 		if layout, ok := formats[name]; ok {
 			return timeTarget.Format(layout)
