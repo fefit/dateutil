@@ -1,5 +1,9 @@
 # dateutil
 
+[![Build Status](https://travis-ci.com/fefit/dateutil.svg?branch=master)](https://travis-ci.com/github/fefit/dateutil)
+[![codecov](https://codecov.io/gh/fefit/dateutil/branch/master/graph/badge.svg)](https://codecov.io/gh/fefit/dateutil)
+
+
 An implementation of php methods strtotime, date_format.
 
 ## Usage
