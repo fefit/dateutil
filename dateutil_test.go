@@ -324,4 +324,10 @@ func TestStrToTime(t *testing.T) {
 	} else {
 		assert.Fail(t, "StrToTime 9/9 fail")
 	}
+	// golang datetime
+	// if date, err := DateTime("2021-09-09 18:07:06 +0000 UTC"); err == nil {
+	// 	assert.True(t, isSameDate(&date, YMD))
+	// } else {
+	// 	assert.Fail(t, "StrToTime 2021-09-09 18:07:06 +0000 UTC fail")
+	// }
 }

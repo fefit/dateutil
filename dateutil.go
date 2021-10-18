@@ -61,6 +61,24 @@ var (
 	allPatternInfo = map[string]*PatternInfo{}
 )
 
+func isTimeFormat(format string) bool {
+	numbers := strings.Split(format, "")
+	if len(numbers) == 4 {
+		maxNums := []int{2, 3, 5, 9}
+		for index, strNum := range numbers {
+			num, err := strconv.Atoi(strNum)
+			if err != nil {
+				return false
+			}
+			if num > maxNums[index] {
+				return false
+			}
+		}
+		return true
+	}
+	return false
+}
+
 // Pattern struct
 type Pattern struct {
 	Rule     *regexp.Regexp
@@ -123,20 +141,26 @@ func DateTime(target interface{}) (time.Time, error) {
 		var lasts FormatResult
 		t = strings.TrimSpace(t)
 		timeFormat := t
-		total := len(t)
+		// match the date format first
 		if result, loc, ok := matchDateFormat(t); ok {
 			if loc[0] != 0 {
 				// ignore, try time format
 			} else {
-				suffix := t[loc[1]:]
+				nextIndex := loc[1]
+				// get the left characters after date string
+				suffix := t[nextIndex:]
+				// no more characters
 				plainSuffix := strings.TrimSpace(suffix)
 				isJustSpaces := suffix == "" || plainSuffix == ""
-				if _, ok := result["YY"]; ok && len(result) == 1 && isJustSpaces {
+				// check if just have four numbers, if true, and is a time format, take it as time format
+				if year, ok := result["YY"]; ok && len(result) == 1 && isJustSpaces && isTimeFormat(year) {
 					// ignore, use time format first
 				} else {
 					lasts = result
-					if loc[1] < total && !isJustSpaces {
-						if strings.HasPrefix(suffix, " ") {
+					// if have more characters
+					if !isJustSpaces {
+						// the next characters begin with a whitespace or 't/T'
+						if strings.HasPrefix(suffix, " ") || plainSuffix[0] == 't' || plainSuffix[0] == 'T' {
 							timeFormat = plainSuffix
 						} else {
 							return time.Time{}, fmt.Errorf("wrong datetime %s", t)
