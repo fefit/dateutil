@@ -175,7 +175,7 @@ func DateTime(target interface{}) (time.Time, error) {
 		if timeFormat != "" {
 			if result, loc, ok := matchTimeFormat(timeFormat); ok {
 				if loc[0] != 0 || loc[1] != len(timeFormat) {
-					return time.Time{}, fmt.Errorf("wrong start of time")
+					return time.Time{}, fmt.Errorf("can't format the time string: %s", timeFormat)
 				}
 				if lasts == nil {
 					lasts = result
