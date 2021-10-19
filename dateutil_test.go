@@ -343,4 +343,10 @@ func TestStrToTime(t *testing.T) {
 	// } else {
 	// 	assert.Fail(t, "StrToTime 2021-09-09 18:07:06 +0000 UTC fail")
 	// }
+	// seconds with fraction
+	if date, err := DateTime("2021-09-09 06:07:06.123456789PM"); err == nil {
+		assert.True(t, isSameDate(&date, YMD|HOUR|MINUTE|SECOND))
+	} else {
+		assert.Fail(t, "StrToTime 2021 fail")
+	}
 }

@@ -2,6 +2,7 @@ package dateutil
 
 import (
 	"fmt"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -44,10 +45,10 @@ var (
 		"YY": "([0-9]{4})",
 	}
 	timeFormats = FormatList{
-		"frac":         "(\\.[0-9]+)",
+		"frac":         "([0-9]{1,9})",
 		"hh":           "(0?[0-9]|1[0-2])",
 		"HH":           "([01][0-9]|2[0-4])",
-		"meridian":     "([AaPp]\\.?[Mm]\\.?[\\0\\t])",
+		"meridian":     "([AaPp]\\.?[Mm]\\.?)\\b",
 		"MN":           "([0-5][0-9])",
 		"II":           "([0-5][0-9])",
 		"space":        "([ \\t])",
@@ -175,7 +176,7 @@ func DateTime(target interface{}) (time.Time, error) {
 		if timeFormat != "" {
 			if result, loc, ok := matchTimeFormat(timeFormat); ok {
 				if loc[0] != 0 || loc[1] != len(timeFormat) {
-					return time.Time{}, fmt.Errorf("can't format the time string: %s", timeFormat)
+					return time.Time{}, fmt.Errorf("can't format the time string: \"%s\"", timeFormat)
 				}
 				if lasts == nil {
 					lasts = result
@@ -305,17 +306,23 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 	} else {
 		second = 0
 	}
-	// millisecond
-	var milliSecond int
-	curMillisecond := noEmptyField(result, "frac")
-	if curMillisecond != "" {
-		milliSecond, _ = strconv.Atoi(curMillisecond[1:])
+	// nanoSeconds
+	var nanoSeconds int
+	fracSeconds := noEmptyField(result, "frac")
+	if fracSeconds != "" {
+		exp := 9 - len(fracSeconds)
+		nanoSeconds, _ = strconv.Atoi(fracSeconds)
+		if exp > 1 {
+			nanoSeconds = nanoSeconds * int(math.Pow10(exp))
+		}
 	} else {
-		milliSecond = 0
+		nanoSeconds = 0
 	}
 	// tz, tzcorrection
 	var lastTime time.Time
+	// set default timezone as 'Local'
 	timezone := "Local"
+	// get matched tz
 	tz := noEmptyField(result, "tz")
 	tzcorrection := noEmptyField(result, "tzcorrection")
 	needCorrection := false
@@ -328,7 +335,7 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 		}
 	}
 	location, _ := time.LoadLocation(timezone)
-	lastTime = time.Date(year, time.Month(month), day, hour, minute, second, milliSecond*1e6, location)
+	lastTime = time.Date(year, time.Month(month), day, hour, minute, second, nanoSeconds, location)
 	if needCorrection {
 		tzcorrection = strings.TrimPrefix(tzcorrection, "GMT")
 		rns := []rune(tzcorrection)
@@ -437,11 +444,11 @@ func matchTimeFormat(target string) (FormatResult, []int, bool) {
 	} else {
 		// keep the orders
 		info, _ := makePatterns("time",
+			"(?i)${hh}:${MN}:${II}[.:]${frac}${meridian}",                     // "4:08:39:12313am"
 			"(?i)${hh}[.:]${MN}[.:]${II}${space}?${meridian}",                 // "4:08:37 am", "7:19:19P.M."
 			"(?i)t?${HH}[.:]${MN}[.:]${II}${space}?(?:${tzcorrection}|${tz})", // "040837CEST", "T191919-0700"
-			"(?i)${hh}:${MN}:${II}[.:][0-9]+${meridian}",                      // "4:08:39:12313am"
 			"(?i)${hh}[.:]${MN}${space}?${meridian}",                          // "4:08:37 am", "7:19:19P.M."
-			"(?i)t?${HH}[.:]${MN}[.:]${II}${frac}",                            // "04.08.37.81412", "19:19:19.532453"
+			"(?i)t?${HH}[.:]${MN}[.:]${II}\\.${frac}",                         // "04.08.37.81412", "19:19:19.532453"
 			"(?i)t?${HH}[.:]${MN}[.:]${II}",                                   // "04.08.37", "t19:19:19"
 			"(?i)t?${HH}[.:]${MN}",                                            //	"04:08", "19.19", "T23:43"
 			"(?i)${hh}${space}?${meridian}",                                   // "4 am", "5PM"
