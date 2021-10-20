@@ -338,15 +338,16 @@ func TestStrToTime(t *testing.T) {
 		assert.Fail(t, "StrToTime 2021 fail")
 	}
 	// golang datetime
-	// if date, err := DateTime("2021-09-09 18:07:06 +0000 UTC"); err == nil {
-	// 	assert.True(t, isSameDate(&date, YMD))
-	// } else {
-	// 	assert.Fail(t, "StrToTime 2021-09-09 18:07:06 +0000 UTC fail")
-	// }
+	if date, err := DateTime("2021-09-09 18:07:06 +0000 UTC"); err == nil {
+		assert.True(t, isSameDate(&date, YEAR|MONTH))
+	} else {
+		assert.Fail(t, "StrToTime 2021-09-09 18:07:06 +0000 UTC fail")
+	}
 	// seconds with fraction
 	if date, err := DateTime("2021-09-09 06:07:06.123456789PM"); err == nil {
 		assert.True(t, isSameDate(&date, YMD|HOUR|MINUTE|SECOND))
 	} else {
 		assert.Fail(t, "StrToTime 2021 fail")
 	}
+
 }

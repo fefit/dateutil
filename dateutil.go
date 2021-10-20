@@ -32,9 +32,9 @@ var (
 	// months names
 	allMonthExp = []string{"january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december", "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "sept", "oct", "nov", "dec", "viii", "iii", "vii", "xii", "iv", "vi", "ix", "xi", "ii", "i", "v", "x"}
 	// weekday names
-	weekdayFullNames = []string{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}
+	weekdayFullNames = []string{"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
 	// weekday short
-	weekdayShortNames = []string{"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"}
+	weekdayShortNames = []string{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"}
 	// roman number to arabic number
 	romanNumHash = map[rune]int{
 		'i': 1,
@@ -112,13 +112,21 @@ var (
 	rfcFormats = FormatList{}
 	rfcRules   = []string{
 		// golang format time.String(): "2006-01-02 15:04:05.999999999 -0700 MST"
-		"${YY}-${MM}-${DD}[ \\t]+${HH}:${MN}:${II}\\.${frac}[ \\t]+${tzcorrection_plain}[ \\t]+${tz_plain}",
+		"${YY}-${MM}-${DD}[ \\t]+${HH}:${MN}:${II}(?:\\.${frac})?[ \\t]+${tzcorrection_plain}[ \\t]+${tz_plain}",
 		// golang default laytout: "01/02 03:04:05PM '06 -0700"
-		"${MM}\\/${DD}[ \\t]+${mm}-${MN}-${II}${meridian}[ \\t]+'${yy}[ \\t]+${tzcorrection_plain}",
+		"${MM}\\/${DD}[ \\t]+${hh}-${MN}-${II}${meridian}[ \\t]+'${yy}[ \\t]+${tzcorrection_plain}",
 		// ANSIC: "Mon Jan _2 15:04:05 2006"
 		// UnixDate    = "Mon Jan _2 15:04:05 MST 2006"
 		// RubyDate    = "Mon Jan 02 15:04:05 -0700 2006"
-		"(?i)${D}[ \\t]+${M}[ \\t]+${DD}[ \\t]+${mm}:${MN}:${II}(?:[ \\t]+${tz_plain}|${tzcorrection_plain})?[ \\t]+${YY}",
+		"(?i)${D}[ \\t]+${M}[ \\t]+${DD}[ \\t]+${HH}:${MN}:${II}(?:[ \\t]+${tz_plain}|${tzcorrection_plain})?[ \\t]+${YY}",
+		// RFC822      = "02 Jan 06 15:04 MST"
+		// RFC822Z     = "02 Jan 06 15:04 -0700"
+		"(?i)${DD}[ \\t]+${M}[ \\t]+${yy}[ \\t]+${HH}:${MN}[ \\t]+(?:${tz_plain}|${tzcorrection_plain})",
+		// RFC850      = "Monday, 02-Jan-06 15:04:05 MST"
+		"(?i)${l},[ \\t]+${DD}-${M}-${yy}[ \\t]+${HH}:${MN}:${II}[ \\t]+${tz_plain}",
+		// RFC1123     = "Mon, 02 Jan 2006 15:04:05 MST"
+		// RFC1123Z    = "Mon, 02 Jan 2006 15:04:05 -0700"
+		"(?i)${D},[ \\t]+${DD}[ \\t]+${M}[ \\t]+${YY}[ \\t]+${HH}:${MN}:${II}[ \\t]+(?:${tz_plain}|${tzcorrection_plain})",
 	}
 	allFormats = map[string]*FormatList{
 		"date": &dateFormats,
@@ -127,6 +135,7 @@ var (
 	allPatternInfo = map[string]*PatternInfo{}
 )
 
+// check if the format is a correct time format
 func isTimeFormat(format string) bool {
 	numbers := strings.Split(format, "")
 	if len(numbers) == 4 {
@@ -143,6 +152,16 @@ func isTimeFormat(format string) bool {
 		return true
 	}
 	return false
+}
+
+// get weekday number
+func getWeekdayNum(weekday string) int {
+	for num, name := range weekdayShortNames {
+		if strings.EqualFold(name, weekday[0:3]) {
+			return num
+		}
+	}
+	return -1
 }
 
 // Pattern struct
@@ -286,7 +305,6 @@ func noEmptyField(target FormatResult, args ...string) string {
 
 // translate result information to a time struct
 func makeFormatDateTime(result FormatResult) (time.Time, error) {
-	fmt.Printf("%#v", result)
 	// current time
 	now := time.Now()
 	// get full year of current
@@ -422,6 +440,23 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 	}
 	// make date time
 	lastTime = time.Date(year, time.Month(month), day, hour, minute, second, nanoSeconds, location)
+	// weekday
+	weekday := noEmptyField(result, "l", "D")
+	if weekday != "" {
+		// if the weekday is not current day
+		// fix the day to that weekday
+		curWeekday := int(lastTime.Weekday())
+		relWeekday := getWeekdayNum(weekday)
+		forwardDays := relWeekday - curWeekday
+		if forwardDays != 0 {
+			// make sure the days is increased
+			if forwardDays < 0 {
+				forwardDays += 7
+			}
+			// add date
+			lastTime = lastTime.AddDate(0, 0, forwardDays)
+		}
+	}
 	// fix time to GMT/UTC+0000 time
 	if needCorrection {
 		tzcorrection = strings.TrimPrefix(tzcorrection, "GMT")
@@ -488,8 +523,6 @@ func makePatterns(t string, rules ...string) (*PatternInfo, error) {
 				}
 				return all
 			})
-			fmt.Printf("context:%#v", context)
-			fmt.Println()
 			curRule := regexp.MustCompile(context)
 			pattern.Rule = curRule
 			pattern.Keys = keys
