@@ -118,7 +118,7 @@ var (
 		// ANSIC: "Mon Jan _2 15:04:05 2006"
 		// UnixDate    = "Mon Jan _2 15:04:05 MST 2006"
 		// RubyDate    = "Mon Jan 02 15:04:05 -0700 2006"
-		"(?i)${D}[ \\t]+${M}[ \\t]+${DD}[ \\t]+${HH}:${MN}:${II}(?:[ \\t]+${tz_plain}|${tzcorrection_plain})?[ \\t]+${YY}",
+		"(?i)${D}[ \\t]+${M}[ \\t]+${DD}[ \\t]+${HH}:${MN}:${II}(?:[ \\t]+(?:${tz_plain}|${tzcorrection_plain}))?[ \\t]+${YY}",
 		// RFC822      = "02 Jan 06 15:04 MST"
 		// RFC822Z     = "02 Jan 06 15:04 -0700"
 		"(?i)${DD}[ \\t]+${M}[ \\t]+${yy}[ \\t]+${HH}:${MN}[ \\t]+(?:${tz_plain}|${tzcorrection_plain})",

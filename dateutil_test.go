@@ -25,6 +25,10 @@ const (
 	YMD = YEAR | MONTH | DAY
 )
 
+var (
+	localLocation, _ = time.LoadLocation("Asia/Shanghai")
+)
+
 func isSameDate(date *time.Time, mode EnumDate) bool {
 	testDate := makeTestTime()
 	flag := true
@@ -342,6 +346,110 @@ func TestStrToTime(t *testing.T) {
 		assert.True(t, isSameDate(&date, YEAR|MONTH))
 	} else {
 		assert.Fail(t, "StrToTime 2021-09-09 18:07:06 +0000 UTC fail")
+	}
+	// golang datetime
+	if date, err := DateTime("2021-09-09 18:07:06.123456789 +0000 UTC"); err == nil {
+		assert.True(t, isSameDate(&date, YEAR|MONTH))
+	} else {
+		assert.Fail(t, "StrToTime 2021-09-09 18:07:06.123456789 +0000 UTC fail")
+	}
+	// ANSIC
+	if date, err := DateTime("Mon Jan 02 15:04:05 2006"); err == nil {
+		assert.Equal(t, int(date.Weekday()), 1)
+		assert.Equal(t, date.Day(), 2)
+	} else {
+		assert.Fail(t, "StrToTime Mon Jan 02 15:04:05 2006 fail")
+	}
+	// ANSIC, change the weekday
+	if date, err := DateTime("Fri Jan 02 15:04:05 2006"); err == nil {
+		assert.Equal(t, int(date.Weekday()), 5)
+		assert.Equal(t, date.Day(), 6)
+	} else {
+		assert.Fail(t, "StrToTime Fri Jan 02 15:04:05 2006 fail")
+	}
+	// UnixDate
+	if date, err := DateTime("Mon Jan 02 15:04:05 MST 2006"); err == nil {
+		// UTC-0700 => UTC+0800 -> +15h
+		date = date.In(localLocation)
+		assert.Equal(t, date.Day(), 3)
+		assert.Equal(t, date.Hour(), 6)
+	} else {
+		assert.Fail(t, "StrToTime Mon Jan 02 15:04:05 MST 2006 fail")
+	}
+	// RubyDate
+	if date, err := DateTime("Mon Jan 02 15:04:05 -0700 2006"); err == nil {
+		// UTC-0700 => UTC+0800 -> +15h
+		date = date.In(localLocation)
+		assert.Equal(t, date.Day(), 3)
+		assert.Equal(t, date.Hour(), 6)
+	} else {
+		assert.Fail(t, "StrToTime Mon Jan 02 15:04:05 -0700 2006 fail")
+	}
+	// RubyDate
+	if date, err := DateTime("Fri Jan 02 15:04:05 -0700 2006"); err == nil {
+		// UTC-0700 => UTC+0800 -> +15h
+		// Mon->Fri => +4d
+		date = date.In(localLocation)
+		assert.Equal(t, date.Day(), 7)
+		assert.Equal(t, date.Hour(), 6)
+	} else {
+		assert.Fail(t, "StrToTime Fri Jan 02 15:04:05 -0700 2006 fail")
+	}
+	// RFC850
+	if date, err := DateTime("Monday, 02-Jan-06 15:04:05 MST"); err == nil {
+		// UTC-0700 => UTC+0800 -> +15h
+		date = date.In(localLocation)
+		assert.Equal(t, date.Day(), 3)
+		assert.Equal(t, date.Hour(), 6)
+	} else {
+		assert.Fail(t, "StrToTime Monday, 02-Jan-06 15:04:05 MST fail")
+	}
+	// RFC850
+	if date, err := DateTime("Friday, 02-Jan-06 15:04:05 MST"); err == nil {
+		// UTC-0700 => UTC+0800 -> +15h
+		// Mon->Fri => +4d
+		date = date.In(localLocation)
+		assert.Equal(t, date.Day(), 7)
+		assert.Equal(t, date.Hour(), 6)
+	} else {
+		assert.Fail(t, "StrToTime Friday, 02-Jan-06 15:04:05 MST fail")
+	}
+	// RFC822
+	if date, err := DateTime("02 Jan 06 15:04 MST"); err == nil {
+		// UTC-0700 => UTC+0800 -> +15h
+		date = date.In(localLocation)
+		assert.Equal(t, date.Day(), 3)
+		assert.Equal(t, date.Hour(), 6)
+	} else {
+		assert.Fail(t, "StrToTime 02 Jan 06 15:04 MST fail")
+	}
+	// RFC822Z
+	if date, err := DateTime("02 Jan 06 15:04 -0700"); err == nil {
+		// UTC-0700 => UTC+0800 -> +15h
+		date = date.In(localLocation)
+		assert.Equal(t, date.Day(), 3)
+		assert.Equal(t, date.Hour(), 6)
+	} else {
+		assert.Fail(t, "StrToTime 02 Jan 06 15:04 MST fail")
+	}
+	// RFC1123
+	if date, err := DateTime("Mon, 02 Jan 2006 15:04:05 MST"); err == nil {
+		// UTC-0700 => UTC+0800 -> +15h
+		date = date.In(localLocation)
+		assert.Equal(t, date.Day(), 3)
+		assert.Equal(t, date.Hour(), 6)
+	} else {
+		assert.Fail(t, "StrToTime Mon, 02 Jan 2006 15:04:05 MST fail")
+	}
+	// RFC1123Z
+	if date, err := DateTime("Fri, 02 Jan 2006 15:04:05 -0700"); err == nil {
+		// UTC-0700 => UTC+0800 -> +15h
+		// Mon->Fri => +4d
+		date = date.In(localLocation)
+		assert.Equal(t, date.Day(), 7)
+		assert.Equal(t, date.Hour(), 6)
+	} else {
+		assert.Fail(t, "StrToTime Fri, 02 Jan 2006 15:04:05 -0700 fail")
 	}
 	// seconds with fraction
 	if date, err := DateTime("2021-09-09 06:07:06.123456789PM"); err == nil {
