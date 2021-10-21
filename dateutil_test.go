@@ -22,7 +22,8 @@ const (
 	SECOND
 	MILLISECOND
 	MICROSECOND
-	YMD = YEAR | MONTH | DAY
+	YMD    = YEAR | MONTH | DAY
+	YMDHis = YMD | HOUR | MINUTE | SECOND
 )
 
 var (
@@ -221,7 +222,38 @@ func TestDateFormat(t *testing.T) {
 	}
 }
 
-func TestStrToTime(t *testing.T) {
+func TestNumberDate(t *testing.T) {
+	/**
+	 * Test timestamp date
+	 */
+	// 2021-09-09 18:07:06 since 1970
+	var timestamp int = 1631182026
+	if date, err := DateTime(timestamp); err == nil {
+		assert.True(t, isSameDate(&date, YMDHis))
+	} else {
+		assert.Fail(t, "DateTime int fail")
+	}
+	if date, err := DateTime(int64(timestamp)); err == nil {
+		assert.True(t, isSameDate(&date, YMDHis))
+	} else {
+		assert.Fail(t, "DateTime int64 fail")
+	}
+	if date, err := DateTime(int32(timestamp)); err == nil {
+		assert.True(t, isSameDate(&date, YMDHis))
+	} else {
+		assert.Fail(t, "DateTime int32 fail")
+	}
+	if date, err := DateTime(float64(timestamp)); err == nil {
+		assert.True(t, isSameDate(&date, YMDHis))
+	} else {
+		assert.Fail(t, "DateTime float64 fail")
+	}
+}
+
+func TestStringDate(t *testing.T) {
+	/**
+	 * Test dates
+	 */
 	// 2021-09-09
 	if date, err := DateTime("2021-09-09"); err == nil {
 		assert.True(t, isSameDate(&date, YMD))
@@ -328,6 +360,180 @@ func TestStrToTime(t *testing.T) {
 	} else {
 		assert.Fail(t, "StrToTime 9/9 fail")
 	}
+	// Sep-09-21
+	if date, err := DateTime("Sep-09-21"); err == nil {
+		assert.True(t, isSameDate(&date, YMD))
+	} else {
+		assert.Fail(t, "StrToTime Sep-09-21 fail")
+	}
+	// Sep-09-2021
+	if date, err := DateTime("Sep-09-2021"); err == nil {
+		assert.True(t, isSameDate(&date, YMD))
+	} else {
+		assert.Fail(t, "StrToTime Sep-09-2021 fail")
+	}
+	// 2021-Sep-09
+	if date, err := DateTime("2021-Sep-09"); err == nil {
+		assert.True(t, isSameDate(&date, YMD))
+	} else {
+		assert.Fail(t, "StrToTime 2021-Sep-09 fail")
+	}
+	// 21-Sep-09
+	if date, err := DateTime("21-Sep-09"); err == nil {
+		assert.True(t, isSameDate(&date, YMD))
+	} else {
+		assert.Fail(t, "StrToTime 21-Sep-09 fail")
+	}
+	// 9/9/21
+	if date, err := DateTime("9/9/21"); err == nil {
+		assert.True(t, isSameDate(&date, YMD))
+	} else {
+		assert.Fail(t, "StrToTime 9/9/21 fail")
+	}
+	// 9/9/2021
+	if date, err := DateTime("9/9/2021"); err == nil {
+		assert.True(t, isSameDate(&date, YMD))
+	} else {
+		assert.Fail(t, "StrToTime 9/9/2021 fail")
+	}
+	// 9-9-2021
+	if date, err := DateTime("9-9-2021"); err == nil {
+		assert.True(t, isSameDate(&date, YMD))
+	} else {
+		assert.Fail(t, "StrToTime 9-9-2021 fail")
+	}
+	// 9.9.2021
+	if date, err := DateTime("9.9.2021"); err == nil {
+		assert.True(t, isSameDate(&date, YMD))
+	} else {
+		assert.Fail(t, "StrToTime 9.9.2021 fail")
+	}
+	// 9.9.21
+	if date, err := DateTime("9.9.21"); err == nil {
+		assert.True(t, isSameDate(&date, YMD))
+	} else {
+		assert.Fail(t, "StrToTime 9.9.21 fail")
+	}
+	// 20210909
+	if date, err := DateTime("20210909"); err == nil {
+		assert.True(t, isSameDate(&date, YMD))
+	} else {
+		assert.Fail(t, "StrToTime 20210909 fail")
+	}
+	// 2021-9
+	if date, err := DateTime("2021-9"); err == nil {
+		assert.True(t, isSameDate(&date, YEAR|MONTH))
+	} else {
+		assert.Fail(t, "StrToTime 2021-9 fail")
+	}
+	// 2021-09
+	if date, err := DateTime("2021-09"); err == nil {
+		assert.True(t, isSameDate(&date, YEAR|MONTH))
+	} else {
+		assert.Fail(t, "StrToTime 2021-09 fail")
+	}
+	// 09-September 2021
+	if date, err := DateTime("09-September 2021"); err == nil {
+		assert.True(t, isSameDate(&date, YMD))
+	} else {
+		assert.Fail(t, "StrToTime 09-September 2021 fail")
+	}
+	// 09Sep2021
+	if date, err := DateTime("09Sep2021"); err == nil {
+		assert.True(t, isSameDate(&date, YMD))
+	} else {
+		assert.Fail(t, "StrToTime 09Sep2021 fail")
+	}
+	// 09 ix 2021
+	if date, err := DateTime("09 ix 2021"); err == nil {
+		assert.True(t, isSameDate(&date, YMD))
+	} else {
+		assert.Fail(t, "StrToTime 09 ix 2021 fail")
+	}
+	// September 2021
+	if date, err := DateTime("September 2021"); err == nil {
+		assert.True(t, isSameDate(&date, YEAR|MONTH))
+	} else {
+		assert.Fail(t, "StrToTime September 2021 fail")
+	}
+	// Sep2021
+	if date, err := DateTime("Sep2021"); err == nil {
+		assert.True(t, isSameDate(&date, YEAR|MONTH))
+	} else {
+		assert.Fail(t, "StrToTime Sep2021 fail")
+	}
+	// 2021 September
+	if date, err := DateTime("2021 September"); err == nil {
+		assert.True(t, isSameDate(&date, YEAR|MONTH))
+	} else {
+		assert.Fail(t, "StrToTime 2021 September fail")
+	}
+	// 2021.September
+	if date, err := DateTime("2021.September"); err == nil {
+		assert.True(t, isSameDate(&date, YEAR|MONTH))
+	} else {
+		assert.Fail(t, "StrToTime 2021.September fail")
+	}
+	// 2021-ix
+	if date, err := DateTime("2021-ix"); err == nil {
+		assert.True(t, isSameDate(&date, YEAR|MONTH))
+	} else {
+		assert.Fail(t, "StrToTime 2021-ix fail")
+	}
+	// September 9th, 2021
+	if date, err := DateTime("September 9th, 2021"); err == nil {
+		assert.True(t, isSameDate(&date, YMD))
+	} else {
+		assert.Fail(t, "StrToTime September 9th, 2021 fail")
+	}
+	// September 9, 2021
+	if date, err := DateTime("September 9, 2021"); err == nil {
+		assert.True(t, isSameDate(&date, YMD))
+	} else {
+		assert.Fail(t, "StrToTime September 9, 2021 fail")
+	}
+	// September.9.21
+	if date, err := DateTime("September.9.21"); err == nil {
+		assert.True(t, isSameDate(&date, YMD))
+	} else {
+		assert.Fail(t, "StrToTime September.9.21 fail")
+	}
+	// September 9th
+	if date, err := DateTime("September 9th"); err == nil {
+		assert.True(t, isSameDate(&date, MONTH|DAY))
+	} else {
+		assert.Fail(t, "StrToTime September 9th fail")
+	}
+	// Sep 9
+	if date, err := DateTime("Sep 9"); err == nil {
+		assert.True(t, isSameDate(&date, MONTH|DAY))
+	} else {
+		assert.Fail(t, "StrToTime Sep 9 fail")
+	}
+	// Sep.9
+	if date, err := DateTime("Sep.9"); err == nil {
+		assert.True(t, isSameDate(&date, MONTH|DAY))
+	} else {
+		assert.Fail(t, "StrToTime Sep.9 fail")
+	}
+	// 9 Sep
+	if date, err := DateTime("9 Sep"); err == nil {
+		assert.True(t, isSameDate(&date, MONTH|DAY))
+	} else {
+		assert.Fail(t, "StrToTime 9 Sep fail")
+	}
+	// 9.Sep
+	if date, err := DateTime("9.Sep"); err == nil {
+		assert.True(t, isSameDate(&date, MONTH|DAY))
+	} else {
+		assert.Fail(t, "StrToTime 9.Sep fail")
+	}
+	// Sep
+	if date, err := DateTime("Sep"); err == nil {
+		assert.True(t, isSameDate(&date, MONTH))
+	} else {
+		assert.Fail(t, "StrToTime Sep fail")
+	}
 	// four number, take as time first
 	if date, err := DateTime("2021"); err == nil {
 		assert.Equal(t, date.Hour(), 20)
@@ -341,6 +547,12 @@ func TestStrToTime(t *testing.T) {
 	} else {
 		assert.Fail(t, "StrToTime 2021 fail")
 	}
+}
+
+func TestLayoutDateTime(t *testing.T) {
+	/**
+	 * Test golang layouts
+	 */
 	// golang datetime
 	if date, err := DateTime("2021-09-09 18:07:06 +0000 UTC"); err == nil {
 		assert.True(t, isSameDate(&date, YEAR|MONTH))
@@ -451,11 +663,38 @@ func TestStrToTime(t *testing.T) {
 	} else {
 		assert.Fail(t, "StrToTime Fri, 02 Jan 2006 15:04:05 -0700 fail")
 	}
+}
+
+func TestStringDateTime(t *testing.T) {
 	// seconds with fraction
 	if date, err := DateTime("2021-09-09 06:07:06.123456789PM"); err == nil {
-		assert.True(t, isSameDate(&date, YMD|HOUR|MINUTE|SECOND))
+		assert.True(t, isSameDate(&date, YMDHis))
 	} else {
 		assert.Fail(t, "StrToTime 2021 fail")
 	}
+}
 
+func TestStrToTime(t *testing.T) {
+	// number date
+	var timestamp int64 = 1631182026
+	if date, err := StrToTime(int(timestamp)); err == nil {
+		assert.Equal(t, date, timestamp)
+	} else {
+		assert.Fail(t, "StrToTime int fail")
+	}
+	if date, err := StrToTime(timestamp); err == nil {
+		assert.Equal(t, date, timestamp)
+	} else {
+		assert.Fail(t, "StrToTime int64 fail")
+	}
+	if date, err := StrToTime(int32(timestamp)); err == nil {
+		assert.Equal(t, date, timestamp)
+	} else {
+		assert.Fail(t, "StrToTime int32 fail")
+	}
+	if date, err := StrToTime(float64(timestamp)); err == nil {
+		assert.Equal(t, date, timestamp)
+	} else {
+		assert.Fail(t, "StrToTime float64 fail")
+	}
 }

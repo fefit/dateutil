@@ -59,28 +59,29 @@ var (
 		"D": "(" + strings.Join(weekdayShortNames, "|") + ")",
 	}
 	dateRules = []string{
-		"[+-]?${YY}-${MM}-${DD}",                    // "-0002-07-26", "+1978-04-17", "1814-05-17"
-		"${YY}-${mm}-${dd}",                         // "2008-6-30", "1978-12-22"
-		"${yy}-${MM}-${DD}",                         // "08-06-30", "78-12-22"
-		"${y}-${mm}-${dd}",                          // "2008-6-30", "78-12-22", "8-6-21"
-		"(?i)${M}-${DD}-${y}",                       // "May-09-78", "Apr-17-1790"
-		"(?i)${y}-${M}-${DD}",                       // "78-Dec-22", "1814-MAY-17"
-		"${YY}\\/${MM}\\/${DD}",                     // "2008/06/30", "1978/12/22"
-		"${YY}\\/${mm}\\/${dd}",                     // "2008/6/30", "1978/12/22"
-		"${mm}\\/${dd}\\/${y}",                      // "12/22/78", "1/17/2006", "1/17/6"
-		"${dd}[.\\t-]${mm}[.-]${YY}",                // "30-6-2008", "22.12.1978"
-		"${dd}[.\\t]${mm}\\.${yy}",                  // "30.6.08", "22\t12.78"
-		"${YY}${MM}${DD}",                           // "15810726", "19780417", "18140517"
-		"${mm}\\/${dd}",                             // "5/12", "10/27"
-		"${YY}-${mm}",                               // "2008-6", "2008-06", "1978-12"
-		"(?i)${dd}[ \\t.-]*${m}[ \\t.-]*${y}",       // "30-June 2008", "22DEC78", "14 III 1879"
-		"(?i)${m}[ \\t.-]*${YY}",                    // "June 2008", "DEC1978", "March 1879"
-		"(?i)${YY}[ \\t.-]*${m}",                    // "2008 June", "1978-XII", "1879.MArCH"
-		"(?i)${m}[ .\\t-]*${dd}[,.stndrh\\t ]+${y}", // "July 1st, 2008", "April 17, 1790", "May.9,78"
-		"(?i)${m}[ .\\t-]*${dd}[,.stndrh\\t ]*",     // "July 1st,", "Apr 17", "May.9"
-		"(?i)${d}[ .\\t-]*${m}",                     // "1 July", "17 Apr", "9.May"
-		"${YY}",                                     // "1978", "2008"
-		"(?i)${m}",                                  // "March", "jun", "DEC"
+		// keep the orders, make sure match as much as more characters
+		"^[+-]?${YY}-${MM}-${DD}",                    // "-0002-07-26", "+1978-04-17", "1814-05-17"
+		"^${dd}[.\\t-]${mm}[.-]${YY}",                // "30-6-2008", "22.12.1978"
+		"^${YY}-${mm}-${dd}",                         // "2008-6-30", "1978-12-22"
+		"^${yy}-${MM}-${DD}",                         // "08-06-30", "78-12-22"
+		"^${y}-${mm}-${dd}",                          // "2008-6-30", "78-12-22", "8-6-21"
+		"^(?i)${M}-${DD}-${y}",                       // "May-09-78", "Apr-17-1790"
+		"^(?i)${y}-${M}-${DD}",                       // "78-Dec-22", "1814-MAY-17"
+		"^${YY}\\/${MM}\\/${DD}",                     // "2008/06/30", "1978/12/22"
+		"^${YY}\\/${mm}\\/${dd}",                     // "2008/6/30", "1978/12/22"
+		"^${mm}\\/${dd}\\/${y}",                      // "12/22/78", "1/17/2006", "1/17/6"
+		"^${dd}[.\\t]${mm}\\.${yy}",                  // "30.6.08", "22\t12.78"
+		"^${YY}${MM}${DD}",                           // "15810726", "19780417", "18140517"
+		"^${mm}\\/${dd}",                             // "5/12", "10/27"
+		"^${YY}-${mm}",                               // "2008-6", "2008-06", "1978-12"
+		"(?i)^${dd}[ \\t.-]*${m}[ \\t.-]*${y}",       // "30-June 2008", "22DEC78", "14 III 1879"
+		"(?i)^${m}[ \\t.-]*${YY}",                    // "June 2008", "DEC1978", "March 1879"
+		"(?i)^${YY}[ \\t.-]*${m}",                    // "2008 June", "1978-XII", "1879.MArCH"
+		"(?i)^${m}[ .\\t-]*${dd}[,.stndrh\\t ]+${y}", // "July 1st, 2008", "April 17, 1790", "May.9,78"
+		"(?i)^${m}[ .\\t-]*${dd}[,.stndrh\\t ]*",     // "July 1st,", "Apr 17", "May.9"
+		"(?i)^${dd}[ .\\t-]*${m}",                    // "1 July", "17 Apr", "9.May"
+		"^${YY}",                                     // "1978", "2008"
+		"(?i)^${m}",                                  // "March", "jun", "DEC"
 	}
 	timeFormats = FormatList{
 		"frac":               "([0-9]{1,9})",
@@ -96,37 +97,37 @@ var (
 		"tzcorrection_plain": "([+-](?:1[0-2]|0?[0-9]):?(?:[0-5][0-9])?)",
 	}
 	timeRules = []string{
-		"(?i)${hh}:${MN}:${II}[.:]${frac}${meridian}",                     // "4:08:39:12313am"
-		"(?i)${hh}[.:]${MN}[.:]${II}${space}?${meridian}",                 // "4:08:37 am", "7:19:19P.M."
-		"(?i)t?${HH}[.:]${MN}[.:]${II}${space}?(?:${tzcorrection}|${tz})", // "040837CEST", "T191919-0700"
-		"(?i)${hh}[.:]${MN}${space}?${meridian}",                          // "4:08:37 am", "7:19:19P.M."
-		"(?i)t?${HH}[.:]${MN}[.:]${II}\\.${frac}",                         // "04.08.37.81412", "19:19:19.532453"
-		"(?i)t?${HH}[.:]${MN}[.:]${II}",                                   // "04.08.37", "t19:19:19"
-		"(?i)t?${HH}[.:]${MN}",                                            //	"04:08", "19.19", "T23:43"
-		"(?i)${hh}${space}?${meridian}",                                   // "4 am", "5PM"
-		"(?i)t?${HH}${MN}${II}",                                           // "04.08.37", "t19:19:19"
-		"(?i)t?${HH}${MN}",                                                // "0408", "t1919", "T2343"
-		"(?i)(?:${tzcorrection}|${tz})",                                   // "CEST", "Europe/Amsterdam", "+0430", "GMT-06:00"
+		"(?i)^${hh}:${MN}:${II}[.:]${frac}${meridian}",                     // "4:08:39:12313am"
+		"(?i)^${hh}[.:]${MN}[.:]${II}${space}?${meridian}",                 // "4:08:37 am", "7:19:19P.M."
+		"(?i)^t?${HH}[.:]${MN}[.:]${II}${space}?(?:${tzcorrection}|${tz})", // "040837CEST", "T191919-0700"
+		"(?i)^${hh}[.:]${MN}${space}?${meridian}",                          // "4:08:37 am", "7:19:19P.M."
+		"(?i)^t?${HH}[.:]${MN}[.:]${II}\\.${frac}",                         // "04.08.37.81412", "19:19:19.532453"
+		"(?i)^t?${HH}[.:]${MN}[.:]${II}",                                   // "04.08.37", "t19:19:19"
+		"(?i)^t?${HH}[.:]${MN}",                                            //	"04:08", "19.19", "T23:43"
+		"(?i)^${hh}${space}?${meridian}",                                   // "4 am", "5PM"
+		"(?i)^t?${HH}${MN}${II}",                                           // "04.08.37", "t19:19:19"
+		"(?i)^t?${HH}${MN}",                                                // "0408", "t1919", "T2343"
+		"(?i)^(?:${tzcorrection}|${tz})",                                   // "CEST", "Europe/Amsterdam", "+0430", "GMT-06:00"
 	}
 	// will fill next
 	rfcFormats = FormatList{}
 	rfcRules   = []string{
 		// golang format time.String(): "2006-01-02 15:04:05.999999999 -0700 MST"
-		"${YY}-${MM}-${DD}[ \\t]+${HH}:${MN}:${II}(?:\\.${frac})?[ \\t]+${tzcorrection_plain}[ \\t]+${tz_plain}",
+		"^${YY}-${MM}-${DD}[ \\t]+${HH}:${MN}:${II}(?:\\.${frac})?[ \\t]+${tzcorrection_plain}[ \\t]+${tz_plain}",
 		// golang default laytout: "01/02 03:04:05PM '06 -0700"
-		"${MM}\\/${DD}[ \\t]+${hh}-${MN}-${II}${meridian}[ \\t]+'${yy}[ \\t]+${tzcorrection_plain}",
+		"^${MM}\\/${DD}[ \\t]+${hh}-${MN}-${II}${meridian}[ \\t]+'${yy}[ \\t]+${tzcorrection_plain}",
 		// ANSIC: "Mon Jan _2 15:04:05 2006"
 		// UnixDate    = "Mon Jan _2 15:04:05 MST 2006"
 		// RubyDate    = "Mon Jan 02 15:04:05 -0700 2006"
-		"(?i)${D}[ \\t]+${M}[ \\t]+${DD}[ \\t]+${HH}:${MN}:${II}(?:[ \\t]+(?:${tz_plain}|${tzcorrection_plain}))?[ \\t]+${YY}",
+		"^(?i)${D}[ \\t]+${M}[ \\t]+${DD}[ \\t]+${HH}:${MN}:${II}(?:[ \\t]+(?:${tz_plain}|${tzcorrection_plain}))?[ \\t]+${YY}",
 		// RFC822      = "02 Jan 06 15:04 MST"
 		// RFC822Z     = "02 Jan 06 15:04 -0700"
-		"(?i)${DD}[ \\t]+${M}[ \\t]+${yy}[ \\t]+${HH}:${MN}[ \\t]+(?:${tz_plain}|${tzcorrection_plain})",
+		"^(?i)${DD}[ \\t]+${M}[ \\t]+${yy}[ \\t]+${HH}:${MN}[ \\t]+(?:${tz_plain}|${tzcorrection_plain})",
 		// RFC850      = "Monday, 02-Jan-06 15:04:05 MST"
-		"(?i)${l},[ \\t]+${DD}-${M}-${yy}[ \\t]+${HH}:${MN}:${II}[ \\t]+${tz_plain}",
+		"^(?i)${l},[ \\t]+${DD}-${M}-${yy}[ \\t]+${HH}:${MN}:${II}[ \\t]+${tz_plain}",
 		// RFC1123     = "Mon, 02 Jan 2006 15:04:05 MST"
 		// RFC1123Z    = "Mon, 02 Jan 2006 15:04:05 -0700"
-		"(?i)${D},[ \\t]+${DD}[ \\t]+${M}[ \\t]+${YY}[ \\t]+${HH}:${MN}:${II}[ \\t]+(?:${tz_plain}|${tzcorrection_plain})",
+		"^(?i)${D},[ \\t]+${DD}[ \\t]+${M}[ \\t]+${YY}[ \\t]+${HH}:${MN}:${II}[ \\t]+(?:${tz_plain}|${tzcorrection_plain})",
 	}
 	allFormats = map[string]*FormatList{
 		"date": &dateFormats,
@@ -227,7 +228,7 @@ func DateTime(target interface{}) (time.Time, error) {
 		t = strings.TrimSpace(t)
 		// match golang and rfc format first
 		if result, loc, ok := matchRFCFormat(t); ok {
-			if loc[0] == 0 && len(t) == loc[1] {
+			if len(t) == loc[1] {
 				lasts = result
 			} else {
 				return time.Time{}, fmt.Errorf("wrong datetime format:%s", t)
@@ -236,38 +237,34 @@ func DateTime(target interface{}) (time.Time, error) {
 			timeFormat := t
 			// match the date format first
 			if result, loc, ok := matchDateFormat(t); ok {
-				if loc[0] != 0 {
-					// ignore, try time format
+				nextIndex := loc[1]
+				// get the left characters after date string
+				suffix := t[nextIndex:]
+				// no more characters
+				plainSuffix := strings.TrimSpace(suffix)
+				isJustSpaces := suffix == "" || plainSuffix == ""
+				// check if just have four numbers, if true, and is a time format, take it as time format
+				if year, ok := result["YY"]; ok && len(result) == 1 && isJustSpaces && isTimeFormat(year) {
+					// ignore, use time format first
 				} else {
-					nextIndex := loc[1]
-					// get the left characters after date string
-					suffix := t[nextIndex:]
-					// no more characters
-					plainSuffix := strings.TrimSpace(suffix)
-					isJustSpaces := suffix == "" || plainSuffix == ""
-					// check if just have four numbers, if true, and is a time format, take it as time format
-					if year, ok := result["YY"]; ok && len(result) == 1 && isJustSpaces && isTimeFormat(year) {
-						// ignore, use time format first
-					} else {
-						lasts = result
-						// if have more characters
-						if !isJustSpaces {
-							// the next characters begin with a whitespace or 't/T'
-							if strings.HasPrefix(suffix, " ") || plainSuffix[0] == 't' || plainSuffix[0] == 'T' {
-								timeFormat = plainSuffix
-							} else {
-								return time.Time{}, fmt.Errorf("wrong datetime %s", t)
-							}
+					lasts = result
+					// if have more characters
+					if !isJustSpaces {
+						// the next characters begin with a whitespace or 't/T'
+						if strings.HasPrefix(suffix, " ") || plainSuffix[0] == 't' || plainSuffix[0] == 'T' {
+							timeFormat = plainSuffix
 						} else {
-							// no need for time format
-							timeFormat = ""
+							return time.Time{}, fmt.Errorf("wrong datetime %s", t)
 						}
+					} else {
+						// no need for time format
+						timeFormat = ""
 					}
 				}
 			}
 			if timeFormat != "" {
 				if result, loc, ok := matchTimeFormat(timeFormat); ok {
-					if loc[0] != 0 || loc[1] != len(timeFormat) {
+					if loc[1] != len(timeFormat) {
 						return time.Time{}, fmt.Errorf("can't format the time string: \"%s\"", timeFormat)
 					}
 					if lasts == nil {
