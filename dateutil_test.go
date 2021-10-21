@@ -847,7 +847,19 @@ func TestStringDateTime(t *testing.T) {
 	if date, err := DateTime("2021-09-09 06:07:06.123456789PM"); err == nil {
 		assert.True(t, isSameDate(&date, YMDHis))
 	} else {
-		assert.Fail(t, "StrToTime 2021 fail")
+		assert.Fail(t, "StrToTime 2021-09-09 06:07:06.123456789PM fail")
+	}
+	// seconds with fraction
+	if date, err := DateTime("2021/09/09 06:07:06.123456789PM"); err == nil {
+		assert.True(t, isSameDate(&date, YMDHis))
+	} else {
+		assert.Fail(t, "StrToTime 2021/09/09 06:07:06.123456789PM fail")
+	}
+	// seconds with fraction
+	if date, err := DateTime("2021/09/09T18:07:06.123456789"); err == nil {
+		assert.True(t, isSameDate(&date, YMDHis))
+	} else {
+		assert.Fail(t, "StrToTime 2021/09/09T18:07:06.123456789 fail")
 	}
 }
 

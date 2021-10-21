@@ -57,38 +57,36 @@ var (
 		// weekday
 		"l": "(" + strings.Join(weekdayFullNames, "|") + ")",
 		"D": "(" + strings.Join(weekdayShortNames, "|") + ")",
-		// special
-		"_": "([ tT\\t]|$)",
 	}
 	dateRules = []string{
 		// keep the orders, make sure match as much as more characters
-		"^[+-]?${YY}-${MM}-${DD}(?:\\b|$)",                    // "-0002-07-26", "+1978-04-17", "1814-05-17"
-		"^${dd}[.\\t-]${mm}[.-]${YY}(?:\\b|$)",                // "30-6-2008", "22.12.1978"
-		"^${YY}-${mm}-${dd}(?:\\b|$)",                         // "2008-6-30", "1978-12-22"
-		"^${yy}-${MM}-${DD}(?:\\b|$)",                         // "08-06-30", "78-12-22"
-		"^${y}-${mm}-${dd}(?:\\b|$)",                          // "2008-6-30", "78-12-22", "8-6-21"
-		"^(?i)${M}-${DD}-${y}(?:\\b|$)",                       // "May-09-78", "Apr-17-1790"
-		"^(?i)${y}-${M}-${DD}(?:\\b|$)",                       // "78-Dec-22", "1814-MAY-17"
-		"^${YY}\\/${MM}\\/${DD}(?:\\b|$)",                     // "2008/06/30", "1978/12/22"
-		"^${YY}\\/${mm}\\/${dd}(?:\\b|$)",                     // "2008/6/30", "1978/12/22"
-		"^${mm}\\/${dd}\\/${y}(?:\\b|$)",                      // "12/22/78", "1/17/2006", "1/17/6"
-		"^${dd}[.\\t]${mm}\\.${yy}${_}",                       // Special date, maybe a time:"30.6.08", "22\t12.78"
-		"^${YY}${MM}${DD}(?:\\b|$)",                           // "15810726", "19780417", "18140517"
-		"^${mm}\\/${dd}(?:\\b|$)",                             // "5/12", "10/27"
-		"^${YY}-${mm}(?:\\b|$)",                               // "2008-6", "2008-06", "1978-12"
-		"(?i)^${dd}[ \\t.-]*${m}[ \\t.-]*${y}(?:\\b|$)",       // "30-June 2008", "22DEC78", "14 III 1879"
-		"(?i)^${m}[ \\t.-]*${YY}(?:\\b|$)",                    // "June 2008", "DEC1978", "March 1879"
-		"(?i)^${YY}[ \\t.-]*${m}(?:\\b|$)",                    // "2008 June", "1978-XII", "1879.MArCH"
-		"(?i)^${m}[ .\\t-]*${dd}[,.stndrh\\t ]+${y}(?:\\b|$)", // "July 1st, 2008", "April 17, 1790", "May.9,78"
-		"(?i)^${m}[ .\\t-]*${dd}[,.stndrh\\t ]*(?:\\b|$)",     // "July 1st,", "Apr 17", "May.9"
-		"(?i)^${dd}[ .\\t-]*${m}(?:\\b|$)",                    // "1 July", "17 Apr", "9.May"
-		"^${YY}(?:\\b|$)",                                     // "1978", "2008"
-		"(?i)^${m}(?:\\b|$)",                                  // "March", "jun", "DEC"
+		"^[+-]?${YY}-${MM}-${DD}",                    // "-0002-07-26", "+1978-04-17", "1814-05-17"
+		"^${dd}[.\\t-]${mm}[.-]${YY}",                // "30-6-2008", "22.12.1978"
+		"^${YY}-${mm}-${dd}",                         // "2008-6-30", "1978-12-22"
+		"^${yy}-${MM}-${DD}",                         // "08-06-30", "78-12-22"
+		"^${y}-${mm}-${dd}",                          // "2008-6-30", "78-12-22", "8-6-21"
+		"^(?i)${M}-${DD}-${y}",                       // "May-09-78", "Apr-17-1790"
+		"^(?i)${y}-${M}-${DD}",                       // "78-Dec-22", "1814-MAY-17"
+		"^${YY}\\/${MM}\\/${DD}",                     // "2008/06/30", "1978/12/22"
+		"^${YY}\\/${mm}\\/${dd}",                     // "2008/6/30", "1978/12/22"
+		"^${mm}\\/${dd}\\/${y}",                      // "12/22/78", "1/17/2006", "1/17/6"
+		"^${dd}[.\\t]${mm}\\.${yy}",                  // "30.6.08", "22\t12.78"
+		"^${YY}${MM}${DD}",                           // "15810726", "19780417", "18140517"
+		"^${mm}\\/${dd}",                             // "5/12", "10/27"
+		"^${YY}-${mm}",                               // "2008-6", "2008-06", "1978-12"
+		"(?i)^${dd}[ \\t.-]*${m}[ \\t.-]*${y}",       // "30-June 2008", "22DEC78", "14 III 1879"
+		"(?i)^${m}[ \\t.-]*${YY}",                    // "June 2008", "DEC1978", "March 1879"
+		"(?i)^${YY}[ \\t.-]*${m}",                    // "2008 June", "1978-XII", "1879.MArCH"
+		"(?i)^${m}[ .\\t-]*${dd}[,.stndrh\\t ]+${y}", // "July 1st, 2008", "April 17, 1790", "May.9,78"
+		"(?i)^${m}[ .\\t-]*${dd}[,.stndrh\\t ]*",     // "July 1st,", "Apr 17", "May.9"
+		"(?i)^${dd}[ .\\t-]*${m}",                    // "1 July", "17 Apr", "9.May"
+		"^${YY}",                                     // "1978", "2008"
+		"(?i)^${m}",                                  // "March", "jun", "DEC"
 	}
 	timeFormats = FormatList{
 		"frac":               "([0-9]{1,9})",
 		"hh":                 "(1[0-2]|0?[0-9])",
-		"HH":                 "([01][0-9]|2[0-4])",
+		"HH":                 "(1[0-9]|2[0-4]|0?[0-9])",
 		"meridian":           "([AaPp]\\.?[Mm](?:\\.?|\\b|$))",
 		"MN":                 "([1-5][0-9]|0?[0-9])",
 		"MNA":                "([0-5][0-9])",
@@ -100,17 +98,17 @@ var (
 		"tzcorrection_plain": "([+-](?:1[0-2]|0?[0-9]):?(?:[0-5][0-9])?)",
 	}
 	timeRules = []string{
-		"(?i)^${hh}:${MN}:${II}[.:]${frac}${meridian}",                       // "4:08:39:12313am"
-		"(?i)^${hh}[.:]${MN}[.:]${II}[ \\t]?${meridian}",                     // "4:08:37 am", "7:19:19P.M."
-		"(?i)^t?${HH}[.:]?${MNA}[.:]?${IIA}[ \\t]?(?:${tzcorrection}|${tz})", // "040837CEST", "T191919-0700"
-		"(?i)^${hh}[.:]${MN}[ \\t]?${meridian}",                              // "4:08 am", "7:19P.M."
-		"(?i)^t?${HH}[.:]${MN}[.:]${II}\\.${frac}",                           // "04.08.37.81412", "19:19:19.532453"
-		"(?i)^t?${HH}[.:]${MN}[.:]${II}",                                     // "04.08.37", "t19:19:19"
-		"(?i)^t?${HH}[.:]${MN}",                                              // "04:08", "19.19", "T23:43"
-		"(?i)^${hh}[ \\t]?${meridian}",                                       // "4 am", "5PM"
-		"(?i)^t?${HH}${MNA}${IIA}",                                           // "040837", "T191919"
-		"(?i)^t?${HH}${MNA}",                                                 // "0408", "t1919", "T2343"
-		"(?i)^(?:${tzcorrection}|${tz})",                                     // "CEST", "Europe/Amsterdam", "+0430", "GMT-06:00"
+		"(?i)^${hh}:${MN}:${II}[.:]${frac}${meridian}$",                       // "4:08:39:12313am"
+		"(?i)^${hh}[.:]${MN}[.:]${II}[ \\t]?${meridian}$",                     // "4:08:37 am", "7:19:19P.M."
+		"(?i)^t?${HH}[.:]?${MNA}[.:]?${IIA}[ \\t]?(?:${tzcorrection}|${tz})$", // "040837CEST", "T191919-0700"
+		"(?i)^${hh}[.:]${MN}[ \\t]?${meridian}$",                              // "4:08 am", "7:19P.M."
+		"(?i)^t?${HH}[.:]${MN}[.:]${II}\\.${frac}$",                           // "04.08.37.81412", "19:19:19.532453"
+		"(?i)^t?${HH}[.:]${MN}[.:]${II}$",                                     // "04.08.37", "t19:19:19"
+		"(?i)^t?${HH}[.:]${MN}$",                                              // "04:08", "19.19", "T23:43"
+		"(?i)^${hh}[ \\t]?${meridian}$",                                       // "4 am", "5PM"
+		"(?i)^t?${HH}${MNA}${IIA}$",                                           // "040837", "T191919"
+		"(?i)^t?${HH}${MNA}$",                                                 // "0408", "t1919", "T2343"
+		"(?i)^(?:${tzcorrection}|${tz})$",                                     // "CEST", "Europe/Amsterdam", "+0430", "GMT-06:00"
 	}
 	// will fill next
 	rfcFormats = FormatList{}
@@ -139,28 +137,6 @@ var (
 	allPatternInfo = map[string]*PatternInfo{}
 )
 
-// check if the format is a correct time format
-func isTimeFormat(format string) bool {
-	numbers := strings.Split(format, "")
-	if len(numbers) == 4 {
-		maxNums := []int{2, 9, 5, 9}
-		for index, strNum := range numbers {
-			num, err := strconv.Atoi(strNum)
-			if err != nil {
-				return false
-			}
-			if num > maxNums[index] {
-				return false
-			}
-			if index == 0 && num == 2 {
-				maxNums[1] = 3
-			}
-		}
-		return true
-	}
-	return false
-}
-
 // get weekday number
 func getWeekdayNum(weekday string) int {
 	for num, name := range weekdayShortNames {
@@ -171,30 +147,27 @@ func getWeekdayNum(weekday string) int {
 	return -1
 }
 
-// check if is a time result
-// dd.mm.yy => HH.MN.II
-func transToTimeResult(result FormatResult) (FormatResult, bool) {
-	// check yy first
-	yy := result["yy"]
-	if len(yy) > 2 {
-		return FormatResult{}, false
+// check if is not a timezone but an en month
+func transTimezoneResult(result FormatResult) (FormatResult, bool) {
+	if isResultTimezone(result) {
+		if tz, ok := result["tz"]; ok && tz != "" {
+			month := strings.ToLower(tz)
+			for _, name := range allMonthExp {
+				if name == month {
+					if len(name) == 3 {
+						return FormatResult{
+							"M": month,
+						}, true
+					} else {
+						return FormatResult{
+							"m": month,
+						}, true
+					}
+				}
+			}
+		}
 	}
-	II, _ := strconv.Atoi(yy)
-	if II > 59 {
-		return FormatResult{}, false
-	}
-	// mm, no need check, because month is le 12, always less than MN:59
-	// check dd if is less than 24
-	dd := result["dd"]
-	HH, _ := strconv.Atoi(dd)
-	if HH >= 24 {
-		return FormatResult{}, false
-	}
-	return FormatResult{
-		"II": yy,
-		"MN": result["mm"],
-		"HH": dd,
-	}, true
+	return FormatResult{}, false
 }
 
 func isResultTimezone(result FormatResult) bool {
@@ -274,76 +247,52 @@ func DateTime(target interface{}) (time.Time, error) {
 	case float64:
 		timestamp = int64(t)
 	case string:
-		var lasts FormatResult
+		var (
+			lasts     FormatResult
+			isRFCTime bool
+		)
 		t = strings.TrimSpace(t)
 		// match golang and rfc format first
 		if result, loc, ok := matchRFCFormat(t); ok {
 			if len(t) == loc[1] {
 				lasts = result
-			} else {
-				return time.Time{}, fmt.Errorf("wrong datetime format:%s", t)
+				isRFCTime = true
 			}
-		} else {
-			timeFormat := t
-			// match the date format first
-			if result, loc, ok := matchDateFormat(t); ok {
-				nextIndex := loc[1]
-				needJudge := false
-				// special date
-				// because golang regexp do not support lookahead
-				// so need fill back the lookahead group characters
-				if special, ok := result["_"]; ok {
-					backfillLen := len(special)
-					if backfillLen > 0 {
-						nextIndex -= backfillLen
-					} else {
-						needJudge = true
-					}
-				}
-				// get the left characters after date string
-				suffix := t[nextIndex:]
-				// no more characters
-				plainSuffix := strings.TrimSpace(suffix)
-				isJustSpaces := suffix == "" || plainSuffix == ""
-				// special date
-				if isJustSpaces && needJudge {
-					if timeResult, ok := transToTimeResult(result); ok {
-						lasts = timeResult
-						timeFormat = ""
-					} else {
-						lasts = result
-					}
-				} else if year, ok := result["YY"]; ok && len(result) == 1 && isJustSpaces && isTimeFormat(year) {
-					// check if just have four numbers, if true, and is a time format, take it as time format
-					// ignore, use time format first
+		}
+		// not rfc time
+		if !isRFCTime {
+			// match time first
+			if result, _, ok := matchTimeFormat(t); ok {
+				// if timezone, but match a en month
+				if timeResult, ok := transTimezoneResult(result); ok {
+					lasts = timeResult
 				} else {
 					lasts = result
-					// if have more characters
-					if !isJustSpaces {
-						// the next characters begin with a whitespace or 't/T'
-						if strings.HasPrefix(suffix, " ") || plainSuffix[0] == 't' || plainSuffix[0] == 'T' {
-							timeFormat = plainSuffix
-						} else {
-							return time.Time{}, fmt.Errorf("wrong datetime %s", t)
-						}
-					} else {
-						// no need for time format
-						timeFormat = ""
-					}
 				}
-			}
-			if timeFormat != "" {
-				if result, loc, ok := matchTimeFormat(timeFormat); ok {
-					if loc[1] != len(timeFormat) {
-						return time.Time{}, fmt.Errorf("can't format the time string: \"%s\"", timeFormat)
-					}
-					if lasts == nil {
-						lasts = result
-					} else {
-						for key, value := range result {
-							lasts[key] = value
+			} else {
+				// not a time format, so maybe a date or a datetime
+				// match the date format first
+				if result, loc, ok := matchDateFormat(t); ok {
+					// set lasts
+					lasts = result
+					// set next index
+					nextIndex := loc[1]
+					// get the left characters after date string
+					suffix := t[nextIndex:]
+					// no more characters
+					timeFormat := strings.TrimSpace(suffix)
+					// special date
+					if timeFormat != "" {
+						if result, _, ok := matchTimeFormat(timeFormat); ok {
+							for key, value := range result {
+								lasts[key] = value
+							}
+						} else {
+							return time.Time{}, fmt.Errorf("wrong time format:'%s'", t)
 						}
 					}
+				} else {
+					return time.Time{}, fmt.Errorf("wrong date or datetime:'%s'", t)
 				}
 			}
 		}
@@ -374,110 +323,6 @@ func noEmptyField(target FormatResult, args ...string) string {
 func makeFormatDateTime(result FormatResult) (time.Time, error) {
 	// current time
 	now := time.Now()
-	// get full year of current
-	year := now.Year()
-	strYear := strconv.Itoa(year)
-	rnYear := []rune(strYear)
-	curYear := noEmptyField(result, "YY", "yy", "y")
-	if curYear != "" {
-		rns := []rune(curYear)
-		total := len(curYear)
-		switch total {
-		case 4:
-		case 3:
-			// e.g. '032' -> '2032'
-			if rns[0] == '0' {
-				rns = append(rnYear[0:1], rns...)
-			}
-		case 2:
-			rns = append(rnYear[0:2], rns...)
-		case 1:
-			rns = append(rnYear[0:2], []rune{'0', rns[0]}...)
-		}
-		year, _ = strconv.Atoi(string(rns))
-	}
-	curMonth := noEmptyField(result, "MM", "mm")
-	// month
-	var month int
-	if curMonth != "" {
-		month, _ = strconv.Atoi(curMonth)
-	} else {
-		curMonth = noEmptyField(result, "M", "m")
-		if curMonth != "" {
-			curMonth = strings.ToLower(curMonth)
-			for index, name := range allMonthExp {
-				if name == curMonth {
-					if index >= 24 {
-						// roman
-						month = 0
-						prev := 0
-						rns := []rune(name)
-						for idx, num := range rns {
-							value := romanNumHash[num]
-							if idx > 0 && value > prev {
-								month = value - prev
-							} else {
-								month += value
-							}
-							prev = value
-						}
-					} else {
-						month = index%12 + 1
-					}
-					break
-				}
-			}
-		} else {
-			month = int(now.Month())
-		}
-	}
-	// day
-	var day int
-	curDay := noEmptyField(result, "DD", "dd")
-	if curDay != "" {
-		day, _ = strconv.Atoi(curDay)
-	} else {
-		day = now.Day()
-	}
-	// hour
-	var hour int
-	curHour := noEmptyField(result, "HH", "hh")
-	if curHour != "" {
-		hour, _ = strconv.Atoi(curHour)
-		if meridian, ok := result["meridian"]; ok && (meridian[0] == 'P' || meridian[0] == 'p') {
-			hour += 12
-		}
-	} else {
-		hour = 0
-	}
-	// minute
-	var minute int
-	curMinute := noEmptyField(result, "MN", "MNA")
-	if curMinute != "" {
-		minute, _ = strconv.Atoi(curMinute)
-	} else {
-		minute = 0
-	}
-	// second
-	var second int
-	curSecond := noEmptyField(result, "II", "IIA")
-	if curSecond != "" {
-		second, _ = strconv.Atoi(curSecond)
-	} else {
-		second = 0
-	}
-	// nanoSeconds
-	var nanoSeconds int
-	fracSeconds := noEmptyField(result, "frac")
-	if fracSeconds != "" {
-		exp := 9 - len(fracSeconds)
-		nanoSeconds, _ = strconv.Atoi(fracSeconds)
-		if exp > 1 {
-			nanoSeconds = nanoSeconds * int(math.Pow10(exp))
-		}
-	} else {
-		nanoSeconds = 0
-	}
 	// tz, tzcorrection
 	var lastTime time.Time
 	// set default timezone as 'Local'
@@ -500,35 +345,137 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 		}
 		needCorrection = true
 	}
-	// plain timezone, set hour/minute/second/nanoseconds to now time
-	if (hasTimezone || needCorrection) && isResultTimezone(result) {
-		hour = now.Hour()
-		minute = now.Minute()
-		second = now.Second()
-		nanoSeconds = now.Nanosecond()
-	}
 	// load location
 	location, err := time.LoadLocation(timezone)
 	if err != nil {
 		return time.Time{}, err
 	}
-	// make date time
-	lastTime = time.Date(year, time.Month(month), day, hour, minute, second, nanoSeconds, location)
-	// weekday
-	weekday := noEmptyField(result, "l", "D")
-	if weekday != "" {
-		// if the weekday is not current day
-		// fix the day to that weekday
-		curWeekday := int(lastTime.Weekday())
-		relWeekday := getWeekdayNum(weekday)
-		forwardDays := relWeekday - curWeekday
-		if forwardDays != 0 {
-			// make sure the days is increased
-			if forwardDays < 0 {
-				forwardDays += 7
+	// plain timezone, set hour/minute/second/nanoseconds to now time
+	if (hasTimezone || needCorrection) && isResultTimezone(result) {
+		lastTime = now.In(location)
+	} else {
+		// get full year of current
+		year := now.Year()
+		strYear := strconv.Itoa(year)
+		rnYear := []rune(strYear)
+		curYear := noEmptyField(result, "YY", "yy", "y")
+		if curYear != "" {
+			rns := []rune(curYear)
+			total := len(curYear)
+			switch total {
+			case 4:
+			case 3:
+				// e.g. '032' -> '2032'
+				if rns[0] == '0' {
+					rns = append(rnYear[0:1], rns...)
+				}
+			case 2:
+				rns = append(rnYear[0:2], rns...)
+			case 1:
+				rns = append(rnYear[0:2], []rune{'0', rns[0]}...)
 			}
-			// add date
-			lastTime = lastTime.AddDate(0, 0, forwardDays)
+			year, _ = strconv.Atoi(string(rns))
+		}
+		curMonth := noEmptyField(result, "MM", "mm")
+		// month
+		var month int
+		if curMonth != "" {
+			month, _ = strconv.Atoi(curMonth)
+		} else {
+			curMonth = noEmptyField(result, "M", "m")
+			if curMonth != "" {
+				curMonth = strings.ToLower(curMonth)
+				for index, name := range allMonthExp {
+					if name == curMonth {
+						if index >= 24 {
+							// roman
+							month = 0
+							prev := 0
+							rns := []rune(name)
+							for idx, num := range rns {
+								value := romanNumHash[num]
+								if idx > 0 && value > prev {
+									month = value - prev
+								} else {
+									month += value
+								}
+								prev = value
+							}
+						} else {
+							month = index%12 + 1
+						}
+						break
+					}
+				}
+			} else {
+				month = int(now.Month())
+			}
+		}
+		// day
+		var day int
+		curDay := noEmptyField(result, "DD", "dd")
+		if curDay != "" {
+			day, _ = strconv.Atoi(curDay)
+		} else {
+			day = now.Day()
+		}
+		// hour
+		var hour int
+		curHour := noEmptyField(result, "HH", "hh")
+		if curHour != "" {
+			hour, _ = strconv.Atoi(curHour)
+			if meridian, ok := result["meridian"]; ok && (meridian[0] == 'P' || meridian[0] == 'p') {
+				hour += 12
+			}
+		} else {
+			hour = 0
+		}
+		// minute
+		var minute int
+		curMinute := noEmptyField(result, "MN", "MNA")
+		if curMinute != "" {
+			minute, _ = strconv.Atoi(curMinute)
+		} else {
+			minute = 0
+		}
+		// second
+		var second int
+		curSecond := noEmptyField(result, "II", "IIA")
+		if curSecond != "" {
+			second, _ = strconv.Atoi(curSecond)
+		} else {
+			second = 0
+		}
+		// nanoSeconds
+		var nanoSeconds int
+		fracSeconds := noEmptyField(result, "frac")
+		if fracSeconds != "" {
+			exp := 9 - len(fracSeconds)
+			nanoSeconds, _ = strconv.Atoi(fracSeconds)
+			if exp > 1 {
+				nanoSeconds = nanoSeconds * int(math.Pow10(exp))
+			}
+		} else {
+			nanoSeconds = 0
+		}
+		// make date time
+		lastTime = time.Date(year, time.Month(month), day, hour, minute, second, nanoSeconds, location)
+		// weekday
+		weekday := noEmptyField(result, "l", "D")
+		if weekday != "" {
+			// if the weekday is not current day
+			// fix the day to that weekday
+			curWeekday := int(lastTime.Weekday())
+			relWeekday := getWeekdayNum(weekday)
+			forwardDays := relWeekday - curWeekday
+			if forwardDays != 0 {
+				// make sure the days is increased
+				if forwardDays < 0 {
+					forwardDays += 7
+				}
+				// add date
+				lastTime = lastTime.AddDate(0, 0, forwardDays)
+			}
 		}
 	}
 	// fix time to GMT/UTC+0000 time
@@ -563,7 +510,7 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 func makePatterns(t string, rules ...string) (*PatternInfo, error) {
 	var (
 		ptns       = []*Pattern{}
-		ok         = false
+		ok         bool
 		formatList *FormatList
 	)
 	if formatList, ok = allFormats[t]; ok {
