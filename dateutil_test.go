@@ -23,15 +23,21 @@ const (
 	MILLISECOND
 	MICROSECOND
 	YMD    = YEAR | MONTH | DAY
-	YMDHis = YMD | HOUR | MINUTE | SECOND
+	His    = HOUR | MINUTE | SECOND
+	YMDHis = YMD | His
 )
 
 var (
 	localLocation, _ = time.LoadLocation("Asia/Shanghai")
 )
 
-func isSameDate(date *time.Time, mode EnumDate) bool {
-	testDate := makeTestTime()
+func isSameDate(date *time.Time, mode EnumDate, args ...bool) bool {
+	var testDate time.Time
+	if len(args) == 1 && args[0] == true {
+		testDate = time.Now()
+	} else {
+		testDate = makeTestTime()
+	}
 	flag := true
 	// test if year is equal
 	if flag && (mode&YEAR > 0) {
@@ -44,6 +50,18 @@ func isSameDate(date *time.Time, mode EnumDate) bool {
 	// test if day is equal
 	if flag && (mode&DAY > 0) {
 		flag = date.Day() == testDate.Day()
+	}
+	// test if Hour is equal
+	if flag && (mode&HOUR > 0) {
+		flag = date.Hour() == testDate.Hour()
+	}
+	// test if Minute is equal
+	if flag && (mode&MINUTE > 0) {
+		flag = date.Minute() == testDate.Minute()
+	}
+	// test if Second is equal
+	if flag && (mode&SECOND > 0) {
+		flag = date.Second() == testDate.Second()
 	}
 	return flag
 }
@@ -408,11 +426,17 @@ func TestStringDate(t *testing.T) {
 	} else {
 		assert.Fail(t, "StrToTime 9.9.2021 fail")
 	}
-	// 9.9.21
+	// special date: 9.9.21 => will translate to time format
 	if date, err := DateTime("9.9.21"); err == nil {
-		assert.True(t, isSameDate(&date, YMD))
+		assert.Equal(t, date.Hour(), 9)
+		assert.Equal(t, date.Minute(), 9)
+		assert.Equal(t, date.Second(), 21)
 	} else {
 		assert.Fail(t, "StrToTime 9.9.21 fail")
+	}
+	// special date: 9.9.2021T
+	if _, err := DateTime("9.9.2021T"); err == nil {
+		assert.Fail(t, "StrToTime 9.9.2021T fail")
 	}
 	// 20210909
 	if date, err := DateTime("20210909"); err == nil {
@@ -662,6 +686,159 @@ func TestLayoutDateTime(t *testing.T) {
 		assert.Equal(t, date.Hour(), 6)
 	} else {
 		assert.Fail(t, "StrToTime Fri, 02 Jan 2006 15:04:05 -0700 fail")
+	}
+}
+
+func TestStringTime(t *testing.T) {
+	// 6:07:06:12313pm
+	if date, err := DateTime("6:07:06:12313pm"); err == nil {
+		assert.True(t, isSameDate(&date, His))
+		assert.True(t, isSameDate(&date, YMD, true))
+	} else {
+		assert.Fail(t, "StrToTime 6:07:06:12313pm fail")
+	}
+	// 6:07:06 pm
+	if date, err := DateTime("6:07:06 pm"); err == nil {
+		assert.True(t, isSameDate(&date, His))
+		assert.True(t, isSameDate(&date, YMD, true))
+	} else {
+		assert.Fail(t, "StrToTime 6:07:06 pm fail")
+	}
+	// 6.07.06P.M.
+	if date, err := DateTime("6.07.06P.M."); err == nil {
+		assert.True(t, isSameDate(&date, His))
+		assert.True(t, isSameDate(&date, YMD, true))
+	} else {
+		assert.Fail(t, "StrToTime 6.07.06P.M. fail")
+	}
+	// 6.07.06P.M
+	if date, err := DateTime("6.07.06P.M"); err == nil {
+		assert.True(t, isSameDate(&date, His))
+		assert.True(t, isSameDate(&date, YMD, true))
+	} else {
+		assert.Fail(t, "StrToTime 6.07.06P.M fail")
+	}
+	// 180706CET
+	if date, err := DateTime("180706CET"); err == nil {
+		assert.True(t, isSameDate(&date, MINUTE|SECOND))
+	} else {
+		assert.Fail(t, "StrToTime 180706CET fail")
+	}
+	// T180706+0800
+	if date, err := DateTime("T180706+0800"); err == nil {
+		date = date.In(localLocation)
+		assert.True(t, isSameDate(&date, His))
+		assert.True(t, isSameDate(&date, YMD, true))
+	} else {
+		assert.Fail(t, "StrToTime T180706+0800 fail")
+	}
+	// 6:07 pm
+	if date, err := DateTime("6:07 pm"); err == nil {
+		assert.True(t, isSameDate(&date, HOUR|MINUTE))
+		assert.True(t, isSameDate(&date, YMD, true))
+	} else {
+		assert.Fail(t, "StrToTime 6:07 pm fail")
+	}
+	// 6:07P.M.
+	if date, err := DateTime("6:07P.M."); err == nil {
+		assert.True(t, isSameDate(&date, HOUR|MINUTE))
+		assert.True(t, isSameDate(&date, YMD, true))
+	} else {
+		assert.Fail(t, "StrToTime 6:07P.M. fail")
+	}
+	// 18:07:06.123456
+	if date, err := DateTime("18:07:06.123456"); err == nil {
+		assert.True(t, isSameDate(&date, His))
+		assert.True(t, isSameDate(&date, YMD, true))
+		assert.Equal(t, date.Nanosecond(), 123456000)
+	} else {
+		assert.Fail(t, "StrToTime 18:07:06.123456 fail")
+	}
+	// 18.07.06.123
+	if date, err := DateTime("18.07.06.123"); err == nil {
+		assert.True(t, isSameDate(&date, His))
+		assert.True(t, isSameDate(&date, YMD, true))
+		assert.Equal(t, date.Nanosecond(), 123000000)
+	} else {
+		assert.Fail(t, "StrToTime 18.07.06.123 fail")
+	}
+	// 9.9.21T18.07.06.123
+	if date, err := DateTime("9.9.21T18.07.06.123"); err == nil {
+		assert.True(t, isSameDate(&date, YMDHis))
+		assert.Equal(t, date.Nanosecond(), 123000000)
+	} else {
+		assert.Fail(t, "StrToTime 9.9.21T18.07.06.123 fail")
+	}
+	// 18.07.06
+	if date, err := DateTime("18.07.06"); err == nil {
+		assert.True(t, isSameDate(&date, His))
+		assert.True(t, isSameDate(&date, YMD, true))
+	} else {
+		assert.Fail(t, "StrToTime 18.07.06 fail")
+	}
+	// 18.07
+	if date, err := DateTime("18.07"); err == nil {
+		assert.True(t, isSameDate(&date, HOUR|MINUTE))
+		assert.True(t, isSameDate(&date, YMD, true))
+	} else {
+		assert.Fail(t, "StrToTime 18.07 fail")
+	}
+	// 18:07
+	if date, err := DateTime("18:07"); err == nil {
+		assert.True(t, isSameDate(&date, HOUR|MINUTE))
+		assert.True(t, isSameDate(&date, YMD, true))
+	} else {
+		assert.Fail(t, "StrToTime 18:07 fail")
+	}
+	// T18:07
+	if date, err := DateTime("T18:07"); err == nil {
+		assert.True(t, isSameDate(&date, HOUR|MINUTE))
+		assert.True(t, isSameDate(&date, YMD, true))
+	} else {
+		assert.Fail(t, "StrToTime T18:07 fail")
+	}
+	// 6 pm
+	if date, err := DateTime("6 pm"); err == nil {
+		assert.True(t, isSameDate(&date, HOUR))
+		assert.True(t, isSameDate(&date, YMD, true))
+	} else {
+		assert.Fail(t, "StrToTime 6 pm fail")
+	}
+	// 6am
+	if date, err := DateTime("6am"); err == nil {
+		// not equal
+		assert.False(t, isSameDate(&date, HOUR))
+		assert.True(t, isSameDate(&date, YMD, true))
+	} else {
+		assert.Fail(t, "StrToTime 6am fail")
+	}
+	// 180706
+	if date, err := DateTime("180706"); err == nil {
+		assert.True(t, isSameDate(&date, His))
+		assert.True(t, isSameDate(&date, YMD, true))
+	} else {
+		assert.Fail(t, "StrToTime 180706 fail")
+	}
+	// t180706
+	if date, err := DateTime("t180706"); err == nil {
+		assert.True(t, isSameDate(&date, His))
+		assert.True(t, isSameDate(&date, YMD, true))
+	} else {
+		assert.Fail(t, "StrToTime t180706 fail")
+	}
+	// 1807
+	if date, err := DateTime("1807"); err == nil {
+		assert.True(t, isSameDate(&date, HOUR|MINUTE))
+		assert.True(t, isSameDate(&date, YMD, true))
+	} else {
+		assert.Fail(t, "StrToTime 1807 fail")
+	}
+	// t1807
+	if date, err := DateTime("t1807"); err == nil {
+		assert.True(t, isSameDate(&date, HOUR|MINUTE))
+		assert.True(t, isSameDate(&date, YMD, true))
+	} else {
+		assert.Fail(t, "StrToTime t1807 fail")
 	}
 }
 

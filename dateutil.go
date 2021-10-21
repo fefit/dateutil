@@ -57,57 +57,60 @@ var (
 		// weekday
 		"l": "(" + strings.Join(weekdayFullNames, "|") + ")",
 		"D": "(" + strings.Join(weekdayShortNames, "|") + ")",
+		// special
+		"_": "([ tT\\t]|$)",
 	}
 	dateRules = []string{
 		// keep the orders, make sure match as much as more characters
-		"^[+-]?${YY}-${MM}-${DD}",                    // "-0002-07-26", "+1978-04-17", "1814-05-17"
-		"^${dd}[.\\t-]${mm}[.-]${YY}",                // "30-6-2008", "22.12.1978"
-		"^${YY}-${mm}-${dd}",                         // "2008-6-30", "1978-12-22"
-		"^${yy}-${MM}-${DD}",                         // "08-06-30", "78-12-22"
-		"^${y}-${mm}-${dd}",                          // "2008-6-30", "78-12-22", "8-6-21"
-		"^(?i)${M}-${DD}-${y}",                       // "May-09-78", "Apr-17-1790"
-		"^(?i)${y}-${M}-${DD}",                       // "78-Dec-22", "1814-MAY-17"
-		"^${YY}\\/${MM}\\/${DD}",                     // "2008/06/30", "1978/12/22"
-		"^${YY}\\/${mm}\\/${dd}",                     // "2008/6/30", "1978/12/22"
-		"^${mm}\\/${dd}\\/${y}",                      // "12/22/78", "1/17/2006", "1/17/6"
-		"^${dd}[.\\t]${mm}\\.${yy}",                  // "30.6.08", "22\t12.78"
-		"^${YY}${MM}${DD}",                           // "15810726", "19780417", "18140517"
-		"^${mm}\\/${dd}",                             // "5/12", "10/27"
-		"^${YY}-${mm}",                               // "2008-6", "2008-06", "1978-12"
-		"(?i)^${dd}[ \\t.-]*${m}[ \\t.-]*${y}",       // "30-June 2008", "22DEC78", "14 III 1879"
-		"(?i)^${m}[ \\t.-]*${YY}",                    // "June 2008", "DEC1978", "March 1879"
-		"(?i)^${YY}[ \\t.-]*${m}",                    // "2008 June", "1978-XII", "1879.MArCH"
-		"(?i)^${m}[ .\\t-]*${dd}[,.stndrh\\t ]+${y}", // "July 1st, 2008", "April 17, 1790", "May.9,78"
-		"(?i)^${m}[ .\\t-]*${dd}[,.stndrh\\t ]*",     // "July 1st,", "Apr 17", "May.9"
-		"(?i)^${dd}[ .\\t-]*${m}",                    // "1 July", "17 Apr", "9.May"
-		"^${YY}",                                     // "1978", "2008"
-		"(?i)^${m}",                                  // "March", "jun", "DEC"
+		"^[+-]?${YY}-${MM}-${DD}(?:\\b|$)",                    // "-0002-07-26", "+1978-04-17", "1814-05-17"
+		"^${dd}[.\\t-]${mm}[.-]${YY}(?:\\b|$)",                // "30-6-2008", "22.12.1978"
+		"^${YY}-${mm}-${dd}(?:\\b|$)",                         // "2008-6-30", "1978-12-22"
+		"^${yy}-${MM}-${DD}(?:\\b|$)",                         // "08-06-30", "78-12-22"
+		"^${y}-${mm}-${dd}(?:\\b|$)",                          // "2008-6-30", "78-12-22", "8-6-21"
+		"^(?i)${M}-${DD}-${y}(?:\\b|$)",                       // "May-09-78", "Apr-17-1790"
+		"^(?i)${y}-${M}-${DD}(?:\\b|$)",                       // "78-Dec-22", "1814-MAY-17"
+		"^${YY}\\/${MM}\\/${DD}(?:\\b|$)",                     // "2008/06/30", "1978/12/22"
+		"^${YY}\\/${mm}\\/${dd}(?:\\b|$)",                     // "2008/6/30", "1978/12/22"
+		"^${mm}\\/${dd}\\/${y}(?:\\b|$)",                      // "12/22/78", "1/17/2006", "1/17/6"
+		"^${dd}[.\\t]${mm}\\.${yy}${_}",                       // Special date, maybe a time:"30.6.08", "22\t12.78"
+		"^${YY}${MM}${DD}(?:\\b|$)",                           // "15810726", "19780417", "18140517"
+		"^${mm}\\/${dd}(?:\\b|$)",                             // "5/12", "10/27"
+		"^${YY}-${mm}(?:\\b|$)",                               // "2008-6", "2008-06", "1978-12"
+		"(?i)^${dd}[ \\t.-]*${m}[ \\t.-]*${y}(?:\\b|$)",       // "30-June 2008", "22DEC78", "14 III 1879"
+		"(?i)^${m}[ \\t.-]*${YY}(?:\\b|$)",                    // "June 2008", "DEC1978", "March 1879"
+		"(?i)^${YY}[ \\t.-]*${m}(?:\\b|$)",                    // "2008 June", "1978-XII", "1879.MArCH"
+		"(?i)^${m}[ .\\t-]*${dd}[,.stndrh\\t ]+${y}(?:\\b|$)", // "July 1st, 2008", "April 17, 1790", "May.9,78"
+		"(?i)^${m}[ .\\t-]*${dd}[,.stndrh\\t ]*(?:\\b|$)",     // "July 1st,", "Apr 17", "May.9"
+		"(?i)^${dd}[ .\\t-]*${m}(?:\\b|$)",                    // "1 July", "17 Apr", "9.May"
+		"^${YY}(?:\\b|$)",                                     // "1978", "2008"
+		"(?i)^${m}(?:\\b|$)",                                  // "March", "jun", "DEC"
 	}
 	timeFormats = FormatList{
 		"frac":               "([0-9]{1,9})",
 		"hh":                 "(1[0-2]|0?[0-9])",
 		"HH":                 "([01][0-9]|2[0-4])",
-		"meridian":           "([AaPp]\\.?[Mm]\\.?)\\b",
-		"MN":                 "([0-5][0-9])",
-		"II":                 "([0-5][0-9])",
-		"space":              "([ \\t])",
+		"meridian":           "([AaPp]\\.?[Mm](?:\\.?|\\b|$))",
+		"MN":                 "([1-5][0-9]|0?[0-9])",
+		"MNA":                "([0-5][0-9])",
+		"II":                 "([1-5][0-9]|0?[0-9])",
+		"IIA":                "([0-5][0-9])",
 		"tz":                 "([A-Z][a-z]+(?:[_/][A-Z][a-z]+)+|\\([A-Za-z]{1,6}\\)|[A-Za-z]{1,6})",
 		"tz_plain":           "([A-Z]{1,6})",
 		"tzcorrection":       "((?:GMT)?[+-](?:1[0-2]|0?[0-9]):?(?:[0-5][0-9])?)",
 		"tzcorrection_plain": "([+-](?:1[0-2]|0?[0-9]):?(?:[0-5][0-9])?)",
 	}
 	timeRules = []string{
-		"(?i)^${hh}:${MN}:${II}[.:]${frac}${meridian}",                     // "4:08:39:12313am"
-		"(?i)^${hh}[.:]${MN}[.:]${II}${space}?${meridian}",                 // "4:08:37 am", "7:19:19P.M."
-		"(?i)^t?${HH}[.:]${MN}[.:]${II}${space}?(?:${tzcorrection}|${tz})", // "040837CEST", "T191919-0700"
-		"(?i)^${hh}[.:]${MN}${space}?${meridian}",                          // "4:08:37 am", "7:19:19P.M."
-		"(?i)^t?${HH}[.:]${MN}[.:]${II}\\.${frac}",                         // "04.08.37.81412", "19:19:19.532453"
-		"(?i)^t?${HH}[.:]${MN}[.:]${II}",                                   // "04.08.37", "t19:19:19"
-		"(?i)^t?${HH}[.:]${MN}",                                            //	"04:08", "19.19", "T23:43"
-		"(?i)^${hh}${space}?${meridian}",                                   // "4 am", "5PM"
-		"(?i)^t?${HH}${MN}${II}",                                           // "04.08.37", "t19:19:19"
-		"(?i)^t?${HH}${MN}",                                                // "0408", "t1919", "T2343"
-		"(?i)^(?:${tzcorrection}|${tz})",                                   // "CEST", "Europe/Amsterdam", "+0430", "GMT-06:00"
+		"(?i)^${hh}:${MN}:${II}[.:]${frac}${meridian}",                       // "4:08:39:12313am"
+		"(?i)^${hh}[.:]${MN}[.:]${II}[ \\t]?${meridian}",                     // "4:08:37 am", "7:19:19P.M."
+		"(?i)^t?${HH}[.:]?${MNA}[.:]?${IIA}[ \\t]?(?:${tzcorrection}|${tz})", // "040837CEST", "T191919-0700"
+		"(?i)^${hh}[.:]${MN}[ \\t]?${meridian}",                              // "4:08 am", "7:19P.M."
+		"(?i)^t?${HH}[.:]${MN}[.:]${II}\\.${frac}",                           // "04.08.37.81412", "19:19:19.532453"
+		"(?i)^t?${HH}[.:]${MN}[.:]${II}",                                     // "04.08.37", "t19:19:19"
+		"(?i)^t?${HH}[.:]${MN}",                                              // "04:08", "19.19", "T23:43"
+		"(?i)^${hh}[ \\t]?${meridian}",                                       // "4 am", "5PM"
+		"(?i)^t?${HH}${MNA}${IIA}",                                           // "040837", "T191919"
+		"(?i)^t?${HH}${MNA}",                                                 // "0408", "t1919", "T2343"
+		"(?i)^(?:${tzcorrection}|${tz})",                                     // "CEST", "Europe/Amsterdam", "+0430", "GMT-06:00"
 	}
 	// will fill next
 	rfcFormats = FormatList{}
@@ -140,7 +143,7 @@ var (
 func isTimeFormat(format string) bool {
 	numbers := strings.Split(format, "")
 	if len(numbers) == 4 {
-		maxNums := []int{2, 3, 5, 9}
+		maxNums := []int{2, 9, 5, 9}
 		for index, strNum := range numbers {
 			num, err := strconv.Atoi(strNum)
 			if err != nil {
@@ -148,6 +151,9 @@ func isTimeFormat(format string) bool {
 			}
 			if num > maxNums[index] {
 				return false
+			}
+			if index == 0 && num == 2 {
+				maxNums[1] = 3
 			}
 		}
 		return true
@@ -163,6 +169,50 @@ func getWeekdayNum(weekday string) int {
 		}
 	}
 	return -1
+}
+
+// check if is a time result
+// dd.mm.yy => HH.MN.II
+func transToTimeResult(result FormatResult) (FormatResult, bool) {
+	// check yy first
+	yy := result["yy"]
+	if len(yy) > 2 {
+		return FormatResult{}, false
+	}
+	II, _ := strconv.Atoi(yy)
+	if II > 59 {
+		return FormatResult{}, false
+	}
+	// mm, no need check, because month is le 12, always less than MN:59
+	// check dd if is less than 24
+	dd := result["dd"]
+	HH, _ := strconv.Atoi(dd)
+	if HH >= 24 {
+		return FormatResult{}, false
+	}
+	return FormatResult{
+		"II": yy,
+		"MN": result["mm"],
+		"HH": dd,
+	}, true
+}
+
+func isResultTimezone(result FormatResult) bool {
+	if len(result) > 2 {
+		return false
+	}
+	timezoneFields := map[string]bool{
+		"tz":                 true,
+		"tz_plain":           true,
+		"tzcorrection":       true,
+		"tzcorrection_plain": true,
+	}
+	for key := range result {
+		if _, ok := timezoneFields[key]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 // Pattern struct
@@ -238,13 +288,33 @@ func DateTime(target interface{}) (time.Time, error) {
 			// match the date format first
 			if result, loc, ok := matchDateFormat(t); ok {
 				nextIndex := loc[1]
+				needJudge := false
+				// special date
+				// because golang regexp do not support lookahead
+				// so need fill back the lookahead group characters
+				if special, ok := result["_"]; ok {
+					backfillLen := len(special)
+					if backfillLen > 0 {
+						nextIndex -= backfillLen
+					} else {
+						needJudge = true
+					}
+				}
 				// get the left characters after date string
 				suffix := t[nextIndex:]
 				// no more characters
 				plainSuffix := strings.TrimSpace(suffix)
 				isJustSpaces := suffix == "" || plainSuffix == ""
-				// check if just have four numbers, if true, and is a time format, take it as time format
-				if year, ok := result["YY"]; ok && len(result) == 1 && isJustSpaces && isTimeFormat(year) {
+				// special date
+				if isJustSpaces && needJudge {
+					if timeResult, ok := transToTimeResult(result); ok {
+						lasts = timeResult
+						timeFormat = ""
+					} else {
+						lasts = result
+					}
+				} else if year, ok := result["YY"]; ok && len(result) == 1 && isJustSpaces && isTimeFormat(year) {
+					// check if just have four numbers, if true, and is a time format, take it as time format
 					// ignore, use time format first
 				} else {
 					lasts = result
@@ -358,7 +428,7 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 				}
 			}
 		} else {
-			month = 1
+			month = int(now.Month())
 		}
 	}
 	// day
@@ -367,7 +437,7 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 	if curDay != "" {
 		day, _ = strconv.Atoi(curDay)
 	} else {
-		day = 1
+		day = now.Day()
 	}
 	// hour
 	var hour int
@@ -382,7 +452,7 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 	}
 	// minute
 	var minute int
-	curMinute := noEmptyField(result, "MN")
+	curMinute := noEmptyField(result, "MN", "MNA")
 	if curMinute != "" {
 		minute, _ = strconv.Atoi(curMinute)
 	} else {
@@ -390,7 +460,7 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 	}
 	// second
 	var second int
-	curSecond := noEmptyField(result, "II")
+	curSecond := noEmptyField(result, "II", "IIA")
 	if curSecond != "" {
 		second, _ = strconv.Atoi(curSecond)
 	} else {
@@ -429,6 +499,13 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 			timezone = "GMT"
 		}
 		needCorrection = true
+	}
+	// plain timezone, set hour/minute/second/nanoseconds to now time
+	if (hasTimezone || needCorrection) && isResultTimezone(result) {
+		hour = now.Hour()
+		minute = now.Minute()
+		second = now.Second()
+		nanoSeconds = now.Nanosecond()
 	}
 	// load location
 	location, err := time.LoadLocation(timezone)
