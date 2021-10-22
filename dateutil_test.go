@@ -245,9 +245,10 @@ func TestNumberDate(t *testing.T) {
 	 * Test timestamp date
 	 */
 	// 2021-09-05 18:07:06 since 1970
-	var timestamp int = 1630836426
+	testDate := makeTestTime()
+	// number date
+	var timestamp int64 = testDate.Unix()
 	if date, err := DateTime(timestamp); err == nil {
-		assert.Equal(t, date.Hour(), 18)
 		assert.True(t, isSameDate(&date, YMDHis))
 	} else {
 		assert.Fail(t, "DateTime int fail")
@@ -865,8 +866,9 @@ func TestStringDateTime(t *testing.T) {
 }
 
 func TestStrToTime(t *testing.T) {
+	testDate := makeTestTime()
 	// number date
-	var timestamp int64 = 1630865226
+	var timestamp int64 = testDate.Unix()
 	if date, err := StrToTime(int(timestamp)); err == nil {
 		assert.Equal(t, date, timestamp)
 	} else {
