@@ -3,24 +3,22 @@
 [![Build Status](https://travis-ci.com/fefit/dateutil.svg?branch=master)](https://travis-ci.com/github/fefit/dateutil)
 [![codecov](https://codecov.io/gh/fefit/dateutil/branch/master/graph/badge.svg)](https://codecov.io/gh/fefit/dateutil)
 
-
-An implementation of php methods strtotime, date_format.
+An implementation of PHP methods 'strtotime'(not include the relative formats now), 'date_format' in golang.
 
 ## Usage
 
 ```go
 import (
   "fmt"
-  "github.com/fefit/dateutil"
+  du "github.com/fefit/dateutil"
 )
 func main(){
-   if date, err := dateutil.DateTime("Sep-09-2021"); err == nil{
-     formatted, _ := DateFormat(date, "Y-m-d")
-     fmt.Printf("%s", formatted) // 2021-09-09
+   if date, err := du.DateTime("Sep-05-2021 06:07:06pm"); err == nil{
+     formatted, _ := du.DateFormat(date, "Y-m-d H:i:s")
+     fmt.Printf("%s", formatted) // Output: 2021-09-05 18:07:06
    }
 }
 ```
-
 
 ## License
 
