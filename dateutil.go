@@ -292,7 +292,7 @@ func DateTime(target interface{}) (time.Time, error) {
 		return time.Time{}, fmt.Errorf("wrong datatime %v", target)
 	}
 	location, _ := time.LoadLocation("Local")
-	return time.Unix(timestamp, 0).UTC().In(location), nil
+	return time.Unix(timestamp, 0).In(location), nil
 }
 
 // get any of the argument fields in the target format result

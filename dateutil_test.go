@@ -28,7 +28,7 @@ var (
 )
 
 func makeTestTime() time.Time {
-	return time.Date(2021, time.September, 5, 18, 7, 6, 12345678, time.UTC)
+	return time.Date(2021, time.September, 5, 18, 7, 6, 12345678, time.Local)
 }
 
 func isSameDate(date *time.Time, mode EnumDate, args ...bool) bool {
@@ -247,6 +247,7 @@ func TestNumberDate(t *testing.T) {
 	// 2021-09-05 18:07:06 since 1970
 	var timestamp int = 1630836426
 	if date, err := DateTime(timestamp); err == nil {
+		assert.Equal(t, date.Hour(), 18)
 		assert.True(t, isSameDate(&date, YMDHis))
 	} else {
 		assert.Fail(t, "DateTime int fail")
