@@ -214,24 +214,11 @@ func (pattern *Pattern) Match(target string) (FormatResult, []int, bool) {
 
 // StrToTime to timestamp
 func StrToTime(target interface{}) (int64, error) {
-	switch t := target.(type) {
-	case int64:
-		return t, nil
-	case int:
-		return int64(t), nil
-	case int32:
-		return int64(t), nil
-	case float64:
-		return int64(t), nil
-	case string:
-		nowTime, err := DateTime(t)
-		if err == nil {
-			return nowTime.UTC().Unix(), nil
-		}
-		return 0, err
-	default:
-		return 0, fmt.Errorf("unsupport type %T for StrToTime func", t)
+	nowTime, err := DateTime(target)
+	if err == nil {
+		return nowTime.Unix(), nil
 	}
+	return 0, err
 }
 
 // DateTime func
@@ -321,8 +308,6 @@ func noEmptyField(target FormatResult, args ...string) string {
 
 // translate result information to a time struct
 func makeFormatDateTime(result FormatResult) (time.Time, error) {
-	// current time
-	now := time.Now()
 	// tz, tzcorrection
 	var lastTime time.Time
 	// set default timezone as 'Local'
@@ -352,8 +337,12 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 	}
 	// plain timezone, set hour/minute/second/nanoseconds to now time
 	if (hasTimezone || needCorrection) && isResultTimezone(result) {
-		lastTime = now.In(location)
+		// use UTC time
+		now := time.Now().UTC()
+		lastTime = time.Date(now.Year(), time.Month(now.Month()), now.Day(), now.Hour(), now.Minute(), now.Second(), now.Nanosecond(), location)
 	} else {
+		// current time
+		now := time.Now()
 		// get full year of current
 		year := now.Year()
 		strYear := strconv.Itoa(year)
