@@ -225,6 +225,8 @@ func StrToTime(target interface{}) (int64, error) {
 func DateTime(target interface{}) (time.Time, error) {
 	var timestamp int64
 	switch t := target.(type) {
+	case time.Time:
+		return t.In(time.Local), nil
 	case int64:
 		timestamp = t
 	case int:
@@ -289,10 +291,9 @@ func DateTime(target interface{}) (time.Time, error) {
 		return time.Time{}, fmt.Errorf("wrong datetime string:%s", t)
 	default:
 		// other conditions
-		return time.Time{}, fmt.Errorf("wrong datatime %v", target)
+		return time.Time{}, fmt.Errorf("can't parse the datetime: %#v", target)
 	}
-	location, _ := time.LoadLocation("Local")
-	return time.Unix(timestamp, 0).In(location), nil
+	return time.Unix(timestamp, 0).In(time.Local), nil
 }
 
 // get any of the argument fields in the target format result
@@ -488,8 +489,7 @@ func makeFormatDateTime(result FormatResult) (time.Time, error) {
 	}
 	// Change time to local time
 	if timezone != "Local" {
-		location, _ = time.LoadLocation("Local")
-		lastTime = lastTime.In(location)
+		lastTime = lastTime.In(time.Local)
 	}
 	return lastTime, nil
 }
